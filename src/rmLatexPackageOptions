@@ -1,0 +1,81 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+#
+# removes package option of private packages loaded in given .tex file such that de-macro does its work properly. The corresponding style files are changed according to the option that was given. All private packages must have the suffix '-private' as required by de-macro.
+#
+# !!! currently only works for casper-names and casper-macros !!!
+#
+# usage: - rmLatexPackageOptions example.tex
+#        - rmLatexPackageOptions example
+#
+# author: Thorben Casper
+# created on: 2018/08/15
+
+import os
+import argparse
+import re
+
+# parse input arguments
+parser = argparse.ArgumentParser()
+parser.add_argument("tex_file", help="the .tex-file that shall be modified")
+parser_args = parser.parse_args()
+filename = os.path.splitext(os.path.basename(parser_args.tex_file))[0] # .tex filename without path and extension
+
+# parses the .tex file to find private packages that use options
+f = open(filename+'.tex','r')
+texContent = []
+options = []
+packages = []
+for num, line in enumerate(f,1):
+    if '\\usepackage' in line and '-private}' in line:
+        m = re.search('\\\\usepackage\[(.*)\]{',line)
+        if m and m.group(1):
+            options.append(m.group(1))
+            m = re.search('\\\\usepackage.*{(.*)}',line)
+            packages.append(m.group(1))
+            line = line.replace('['+options[-1]+']','')
+    texContent.append(line)
+f.close()
+texContent = "".join(texContent)
+
+# exit immediately if no package options are used for private packages
+if len(packages) == 0:
+    print('rmLatexPackageOptions: no package options found for private packages')
+    exit()
+
+for i in range(len(packages)):
+    styFile = os.popen("find . -name '" + packages[i] + ".sty' -printf '%p'").readlines()[0]
+    # read content of package file excluding option lines
+    f = open(styFile,'r')
+    insideOptionIf = False      # true when inside if-block responsible for package option
+    insideCorrectOption = False # true when inside correct branch of above mentioned if-block
+    styContent = []
+    for num, line in enumerate(f,1):
+        if line == ('\\if@load'+options[i]+'\n'):
+            insideCorrectOption = True
+        if insideOptionIf and insideCorrectOption and line != '\\else\n' and line != '\\fi\n':
+            styContent.append(line) # appending content
+        if insideOptionIf and line == '\\else\n':
+            if insideCorrectOption:
+                insideCorrectOption = False
+            else:
+                insideCorrectOption = True
+        if not insideOptionIf and not 'DeclareOption' in line and not 'ProcessOptions' in line and not '@load' in line:
+            styContent.append(line) # appending content
+        if '\\if@load' in line and not '\\newif' in line:
+            insideOptionIf = True
+        if insideOptionIf and line == '\\fi\n':
+            insideOptionIf = False
+            insideCorrectOption = False
+    f.close()
+    styContent = "".join(styContent)
+
+    # write modified package file
+    f = open(styFile,'w')
+    f.write(styContent)
+    f.close()
+
+# write modified tex file
+f = open(filename+'.tex','w')
+f.write(texContent)
+f.close()

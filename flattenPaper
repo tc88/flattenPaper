@@ -1,0 +1,125 @@
+#!/bin/bash
+# This script prepares a paper source code to be published to arxiv. It needs to be called with the name of the main .tex file (without extension) that is located in the current directory
+#
+# Usage: - publish2arxiv example prefix
+# Here, example is a .tex file and prefix the prefix for any private macro files apart from temf-* macros
+#
+# Supported source files:
+# - *.tex, *.sty, *.cls, *.clo, *.bib
+#
+# Prerequisites:
+# - all figures must be contained in a folder called 'figs'
+# - packages are loaded without using any additional path
+# - if standalone figures are used together with the standalone package, they must be included with the \includestandalone macro (see standalone package documentation) instead of \input or \include. The filename of the standalone figure must be given without extension, e.g., 'example' instead of 'example.tex'. Additionally, the standalone package option 'mode=build', 'mode=buildmissing' or 'mode=buildnew' must be used
+# - enclose all bib setup lines in the preamble into a beginning line containing BEGIN BIBLIOGRAPHY SETUP and an ending line END BIBLIOGRAPHY SETUP. DO NOT use any other commands than \bibliographystyle, \bibliography and \printbibliography within \begin{document} and \end{document}.
+# - no TUD colors must be used outside of figures
+# - if figures include references to anything in the rest of the LaTeX document, they must be included directly in the LaTeX document or by the \input command
+#
+# Required tools that must be installed:
+# - sponge (in package moreutils)
+# - latexpand
+# - de-macro
+#
+# For bibliography flattening, there should be no comment lines including \bibliography* in the file 
+#
+# - output .tex file is written to paper4arxiv/flattened.tex
+#
+# author: Thorben Casper
+# date: October 2016
+
+# add src folder to path
+PATH=$PATH:$(pwd)/src
+echo $PATH
+
+# check installed software
+hash sponge 2>/dev/null || { echo >&2 "I require sponge but it's not installed.  Aborting."; exit 1; }
+hash latexpand 2>/dev/null || { echo >&2 "I require latexpand but it's not installed.  Aborting."; exit 1; }
+hash de-macro 2>/dev/null || { echo >&2 "I require de-macro but it's not installed.  Aborting."; exit 1; }
+
+# settings
+flattened='flattened' # main .tex file for the paper4arxiv directory
+
+# move all required source files from paper directory to new paper4arxiv directory
+mkdir paper4arxiv
+cp -t paper4arxiv *.tex *.sty *.cls *.clo *.bib 2>>/dev/null
+find . -name '*.sty' -print0 | xargs -0 cp -t paper4arxiv
+cp -r figs/ paper4arxiv 2>>/dev/null
+cp -r figsStandalone/ paper4arxiv 2>>/dev/null
+cp -r tabs/ paper4arxiv 2>>/dev/null
+cd paper4arxiv
+
+# flatten the latex code using latexpand and keep comments to subsequently flatten bib
+latexpand --keep-comments $1.tex > $flattened.tmp
+rm *.tex
+mv $flattened.tmp $flattened.tex
+
+# flatten bib
+flattenBib $flattened
+
+# apply latexpand again to remove comments
+latexpand $flattened.tex | sponge $flattened.tex
+
+# calls tikzternalize to produce .pdf files for all used tikzpictures in order to hide the source codes
+tikzternalize $flattened.tex
+sed -i '/\\input{tudcolours\.def}/d' $flattened.tex
+
+# add IEEE copyright notice
+#addIEEEcopyright $flattened.tex
+
+# expand macros (de-macro requires "-private" postfix to be added to .sty files first)
+rename 's/temf(.*)\./temf$1-private\./g' *.sty
+rename "s/$2-(.*)\./$2-\$1-private\./g" *.sty
+sed -i 's/\\usepackage\(\[\?.*\]\?\){temf-\(.*\)}/\\usepackage\1{temf-\2-private}/g' $flattened.tex
+sed -i "s/\\usepackage\(\[\?.*\]\?\){$2-\(.*\)}/\\\\usepackage\1{$2-\2-private}/g" $flattened.tex
+sed -i 's/\\\\usepackage/\\usepackage/g' $flattened.tex # correct problem introduced by previous line
+rmLatexPackageOptions $flattened.tex
+find . -name '*.sty' -print0 | xargs -0 sed -i 's/\\newcommand\*/\\newcommand/g' # remove star from \newcommand since not supported by de-macro
+flattenUsepackage $flattened.tex
+if [ -f "$2-acronyms-private" ]; then
+    flattenGlossary $flattened.tex "$2-acronyms-private.sty"
+fi
+de-macroFITbow $flattened.tex
+de-macro       $flattened.tex
+mv $flattened-clean.tex $flattened.tex
+rm $flattened # remove unused by de-macro created binary file
+rm temf*-private.sty $2-*-private.sty
+
+# flatten colors (not supported right now)
+#flattenColors $flattened.tex
+
+# clean not used standalone, todonotes, pgfplots, circui(tikz), graphicspath and tikzexternalize settings
+sed -i '/\\usepackage\[\?.*\]\?{standalone}/d' $flattened.tex
+sed -i '/\\usepackage\[\?.*\]\?{todonotes}/d' $flattened.tex
+sed -i '/\\usepackage\[\?.*\]\?{pgfplots}/d' $flattened.tex
+sed -i '/\\pgfplotsset{/d' $flattened.tex
+sed -i '/\\usepackage\[\?.*\]\?{.*tikz}/d' $flattened.tex
+sed -i '/\\usetikzlibrary{/d' $flattened.tex
+sed -i '/\\graphicspath{{/d' $flattened.tex
+sed -i '/\\usepgfplotslibrary{external}/d' $flattened.tex
+sed -i '/\\tikzexternalize\[/d' $flattened.tex
+
+# remove any consecutive blank lines
+cat -s $flattened.tex | sponge $flattened.tex 
+
+# clean up figs directory
+cd figs
+mkdir tmp
+mv -t tmp fig*.pdf fig*.eps fig*.png fig*.jpg 2>>/dev/null
+rm ./* 2>>/dev/null
+mv tmp/* . 2>>/dev/null
+rmdir tmp
+rm *eps-converted-to.pdf 2>>/dev/null
+cd ..
+# clean up figsStandalone directory
+#cd figsStandalone 2>>/dev/null
+#mkdir tmp
+#mv -t tmp fig*.pdf fig*.eps fig*.png fig*.jpg 2>>/dev/null
+#rm ./* 2>>/dev/null
+#mv tmp/* . 2>>/dev/null
+#rmdir tmp
+#rm *eps-converted-to.pdf . 2>>/dev/null
+#cd ..
+#rmdir figsStandalone 2>>/dev/null
+
+# clean up paper4arxiv directory
+rm ${flattened}_bib.tex *.suc *.syc *.upa *.upb *.aux *.auxlock *.log *.pdf *.bcf *.run.xml *.blg *.out 2>>/dev/null

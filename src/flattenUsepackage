@@ -1,0 +1,108 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+#
+# extracts required packages from private packages loaded in given .tex file such that these packages are loaded directly in .tex-file after de-macro has been applied. All private packages must have the suffix '-private' as required by de-macro.
+#
+# usage: - flattenUsepackage example.tex
+#        - flattenUsepackage example
+#
+# author: Thorben Casper
+# created on: 2018/08/16
+
+import os
+import argparse
+import re
+
+# parse input arguments
+parser = argparse.ArgumentParser()
+parser.add_argument("tex_file", help="the .tex-file that shall be modified")
+parser_args = parser.parse_args()
+texFile = os.path.splitext(os.path.basename(parser_args.tex_file))[0] # .tex texFile without path and extension
+
+# parses the .tex file to find private packages
+f = open(texFile+'.tex','r')
+texContent = []
+packages = {}
+packagesPrivate = []
+line2insert = 0
+for num, line in enumerate(f,1):
+    if '\\usepackage' in line and '-private}' in line:
+        match = re.search('\\\\usepackage.*{(.*)}',line)
+        if match:
+            packagesPrivate.append(match.group(1))
+        texContent.append(line)
+    elif '\\usepackage' in line:
+        match = re.search('\\\\usepackage(.*){(.*)}',line)
+        if match:
+            options = match.group(1).strip('[]').split(',')
+            package = match.group(2).split(',')
+            for p in package:
+                packages[p] = options
+        line2insert = num # find last \usepackage line of non-private packages
+        texContent.append(line)
+    else:
+        texContent.append(line)
+f.close()
+
+# exit immediately if no private packages found
+if len(packagesPrivate) == 0:
+    print('flattenUsepackage: no private packages found')
+    exit()
+
+# find required packages of private packages
+newPackages = {}
+for i in range(len(packagesPrivate)):
+    styFile = os.popen("find . -name '" + packagesPrivate[i] + ".sty' -printf '%p'").readlines()[0]
+    f = open(styFile,'r')
+    for num, line in enumerate(f,1):
+        if '\\RequirePackage' in line:
+            match = re.search('\\\\RequirePackage(.*){(.*)}',line)
+            if match:
+                options = match.group(1).strip('[]').split(',')
+                package = match.group(2)
+                # only add package to list if it is not already one of the private packages (avoid recursion)
+                if not package + '-private' in packagesPrivate:
+                    if package in newPackages:
+                        if options[0] != '':
+                            newPackages[package] = list(set(newPackages[package]+options))
+                    else:
+                        newPackages[package] = options
+    f.close()
+
+# walk over newPackages and check whether already existent but new options to be added
+packages2add = newPackages.copy()
+for package in newPackages:
+    if package in packages:
+        for i in range(line2insert):
+            if package in texContent[i]:
+                match = re.search('\\\\usepackage(.*){(.*)}',texContent[i])
+                if match:
+                    options = match.group(1).strip('[]').split(',')
+                    foundPackages = match.group(2)
+                options = list(set(options+newPackages[package]))
+                optionsStr = ",".join(options)
+                if optionsStr and ',' in foundPackages:
+                    print('not sure whether multiple packages can be loaded when options are given, exiting ...')
+                    exit()
+                elif optionsStr:
+                    texContent[i] = '\\usepackage['+optionsStr+']{'+foundPackages+'}\n'
+                else:
+                    texContent[i] = '\\usepackage{'+foundPackages+'}\n'
+        del packages2add[package] # remove already loaded packages from packages that shall be added
+
+# gather all new package definitions in one string to be inserted to LaTeX document
+usepackageAllStr = ''
+for package in packages2add.keys():
+    if len(packages2add[package]) == 1 and packages2add[package][0] == '':
+        usepackageAllStr += '\\usepackage{'+package+'}\n' 
+    else:
+        usepackageAllStr += '\\usepackage['+"".join(packages[package])+']{'+package+'}\n'
+
+# insert all \usepackage lines to LaTeX document
+texContent.insert(line2insert,usepackageAllStr)
+
+# write modified tex file
+texContent = "".join(texContent)
+f = open(texFile+'.tex','w')
+f.write(texContent)
+f.close()

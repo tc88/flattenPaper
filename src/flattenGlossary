@@ -1,0 +1,79 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+#
+# extracts all acronyms from a style file that are used in a LaTeX document and flattens the document by inserting these definitions of acronyms before \begin{document}.
+#
+# prerequisites:
+# - considered LaTeX file must be flattened before flattenGlossary is applied
+# - all used acronyms must be inside of \gls{}, \gls*{}, \glspl{} or \glspl*{}
+# - LaTeX file must be in current directory, style file must be in current directory or any of its subdirectories
+#
+# usage: - rmLatexPackageOptions example.tex acronyms.sty
+#        - rmLatexPackageOptions example acronyms
+#        - rmLatexPackageOptions example.tex ./subdir/acronyms.sty
+#
+# author: Thorben Casper
+# created on: 2018/08/16
+
+import os
+import argparse
+import re
+
+# parse input arguments
+parser = argparse.ArgumentParser()
+parser.add_argument("tex_file", help="the .tex-file that shall be modified")
+parser.add_argument("sty_file", help="the .sty-file that contains the definition of acronyms")
+parser_args = parser.parse_args()
+texFile = os.path.splitext(os.path.basename(parser_args.tex_file))[0] # .tex file without path and extension
+styFile = os.path.splitext(os.path.basename(parser_args.sty_file))[0] # .sty file without path and extension
+
+print(texFile)
+print(styFile)
+
+# parses the .tex file to find usage of acronyms
+f = open(texFile+'.tex','r')
+texContent = []
+acroList = []
+line2insert = 0
+for num, line in enumerate(f,1):
+    # remove line where acronyms package is loaded
+    if not '\\usepackage{'+styFile+'}' in line:
+        texContent.append(line)
+    # find used acronyms
+    if '\\gls' in line:
+        match = re.findall('\\\\gls(?:pl)?\*?{(\w*)}',line)
+        if match:
+            for acro in match:
+                acroList.append(acro)
+    # find position where to insert definitions of acronyms
+    if '\\begin{document}' in line:
+        line2insert = num-2
+f.close()
+# making list of acronyms unique
+acroSet = set(acroList)
+
+# find exact path of style file
+styFileWithPath = os.popen("find . -name '" + styFile + ".sty' -printf '%p'").readlines()[0]
+
+# read content of package file excluding option lines
+f = open(styFileWithPath,'r')
+acroDefs = []
+for num, line in enumerate(f,1):
+    # if definition of acronym is used in LaTeX document, add it to the list of definitions
+    if '\\newacronym' in line:
+        match = re.search('\\\\newacronym{(\w*)}',line)
+        if match and match.group(1):
+            if match.group(1) in acroSet:
+                acroDefs.append(line)
+f.close()
+acroDefs = "".join(acroDefs)
+
+# add definitions of acronyms to LaTeX document
+texContent.insert(line2insert,acroDefs)
+texContent.insert(line2insert+1,'\n')
+
+# write modified LaTeX file
+texContent = "".join(texContent)
+f = open(texFile+'.tex','w')
+f.write(texContent)
+f.close()
