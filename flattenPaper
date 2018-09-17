@@ -60,7 +60,7 @@ flattenBib $flattened
 latexpand $flattened.tex | sponge $flattened.tex
 
 # calls tikzternalize to produce .pdf files for all used tikzpictures in order to hide the source codes
-tikzternalize $flattened.tex
+tikzternalize $flattened.tex figs
 sed -i '/\\input{tudcolours\.def}/d' $flattened.tex
 
 # add IEEE copyright notice

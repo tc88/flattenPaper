@@ -2,7 +2,13 @@
 # -*- coding: utf-8 -*-
 # changes a .tex file in a way that all tikz figures are included as pdf files 
 # 
+# Usage: - tikzternalize example.tex figsDir
+#
 # The figures are numbered according to the figure numbers in the paper. If subfigures are involved, this script supports the subcaption, subfigure and subfig package to add 'a', 'b', [...] to the figure numbers. However, special options of these packages might not be supported
+#
+# prerequisites
+# - all figures must be in one directory, according to figsDir
+# - if externalize library is loaded and its prefix is set in .tex file, it must be done before last \usepackage command
 #
 # commented lines are ignored
 #
@@ -14,26 +20,31 @@ import argparse
 import subprocess
 import re
 import glob
+import shutil
 
 # parse input arguments
 parser = argparse.ArgumentParser()
-parser.add_argument("tex_file", help="the .tex-file that shall be modified")
+parser.add_argument("tex_file", help=".tex-file that shall be modified")
+parser.add_argument("figsDir" , help="directory, in which ALL figures are contained")
 # example how to include additional optional arguments
 # parser.add_argument("-c","--createPDF", help="use if you want to create the .pdf directly",action="store_true")
 parser_args = parser.parse_args()
 filename = parser_args.tex_file
+figsDir = parser_args.figsDir
 
 # reads .tex file and mainly saves line numbers for tikz pictures and the file names of includegraphics files
 f = open(filename,'r')
-contents = []               # collects file content in array of lines
-lineIdxTikz = []            # collects all first lines of a tikzpicture environment 
-figIdxTikz = []             # collects all figure indices of tikzpicture figures
-figIdxInclude = []          # collects all figure indices of includegraphics figures
-figIdxSuffix = ''           # handles to add letter if subfigures are used
-graphicsNames = []          # collects all file names that were originally included using includegraphics
-lastUsepackage = 0          # line of last usepackage use in main .tex file
-figCounter = 1              # top level figure counter
-insideTikzEnviron = False   # indicator whether inside of a tikz environment
+contents = []                     # collects file content in array of lines
+lineIdxTikz = []                  # collects all first lines of a tikzpicture environment 
+figIdxTikz = []                   # collects all figure indices of tikzpicture figures
+figIdxInclude = []                # collects all figure indices of includegraphics figures
+figIdxSuffix = ''                 # handles to add letter if subfigures are used
+graphicsNames = []                # collects all file names that were originally included using includegraphics
+foundExternalize = False          # initializes switch whether externalize library is already used
+foundExternalizePrefix = False    # initializes switch whether prefix of externalize library is already set
+lastUsepackage = 0                # line of last usepackage use in main .tex file
+figCounter = 1                    # top level figure counter
+insideTikzEnviron = False         # indicator whether inside of a tikz environment
 for num, line in enumerate(f,1):
     contents.append(line)
     if line.strip() and not line.strip()[0] == '%':
@@ -48,6 +59,10 @@ for num, line in enumerate(f,1):
                     figCounter -= 1;
             if '\\end{figure}' in line or '\\end{figure*}' in line:
                 figIdxSuffix = '';
+            if '\\usepgfplotslibrary' in line and 'external' in line:
+                foundExternalize = True
+            if 'tikzexternalize[prefix' in line:
+                foundExternalizePrefix = True
             if '\\usepackage' in line:
                 lastUsepackage = num
             if '\\begin{tikzpicture}' in line:
@@ -62,8 +77,8 @@ for num, line in enumerate(f,1):
                 figName = os.path.basename(searchResult)
                 files2move = glob.glob(figPath+figName+'*')
                 for ff in files2move:
-                    os.rename(ff,'./figs/')
-                contents[-1] = line.replace(searchResult,'./figs/fig'+str(figCounter)+figIdxSuffix) 
+                    os.rename(ff,'./'+figsDir+'/')
+                contents[-1] = line.replace(searchResult,'./'+figsDir+'/fig'+str(figCounter)+figIdxSuffix) 
                 graphicsNames.append(os.path.splitext(os.path.basename(searchResult))[0])
                 figIdxInclude.append(str(figCounter)+figIdxSuffix)
                 figCounter += 1
@@ -74,8 +89,8 @@ for num, line in enumerate(f,1):
                 figName = os.path.basename(searchResult)
                 files2move = glob.glob(figPath+'/'+figName+'*')
                 for ff in files2move:
-                    os.rename(ff,'./figs/'+os.path.basename(ff))
-                contents[-1] = line.replace(searchResult,'./figs/fig'+str(figCounter)+figIdxSuffix) 
+                    os.rename(ff,'./'+figsDir+'/'+os.path.basename(ff))
+                contents[-1] = line.replace(searchResult,'./'+figsDir+'/fig'+str(figCounter)+figIdxSuffix) 
                 contents[-1] = contents[-1].replace('includestandalone','includegraphics') 
                 graphicsNames.append(os.path.splitext(os.path.basename(searchResult))[0])
                 figIdxInclude.append(str(figCounter)+figIdxSuffix)
@@ -83,18 +98,24 @@ for num, line in enumerate(f,1):
 f.close()
 
 # renames files that are used by includegraphics and includestandalone
-os.chdir("figs")
+os.chdir(figsDir)
 for i in range(len(graphicsNames)):
     print(glob.glob(graphicsNames[i]+'.*'))
     for figname in glob.glob(graphicsNames[i]+'.*'):
         new_name = re.sub(graphicsNames[i],'fig'+figIdxInclude[i],figname)
-        os.rename(figname,new_name)
+        # rename files associated to current figure if figure is only used once, otherwise copy them
+        if graphicsNames[i] in graphicsNames[i+1:]:
+            shutil.copyfile(figname,new_name)
+        else:
+            os.rename(figname,new_name)
 os.chdir("..")
 
 # adds tikzexternalizer loading commands
 if lastUsepackage != 0:
-    contents.insert(lastUsepackage,'\\usepgfplotslibrary{external}\n'+\
-                                   '\\tikzexternalize[prefix=figs/]\n')
+    if not foundExternalize:
+        contents.insert(lastUsepackage  ,'\\usepgfplotslibrary{external}\n')
+    if not foundExternalizePrefix:
+        contents.insert(lastUsepackage+1,'\\tikzexternalize[prefix='+figsDir+'/]\n')
 
 # add tikzsetnextfilename commands to make the tikzexternalizer use the correct filenames
 if len(lineIdxTikz) != 0:
