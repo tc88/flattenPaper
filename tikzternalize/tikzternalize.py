@@ -59,7 +59,7 @@ for num, line in enumerate(f,1):
                     figCounter -= 1;
             if '\\end{figure}' in line or '\\end{figure*}' in line:
                 figIdxSuffix = '';
-            if '\\usepgfplotslibrary' in line and 'external' in line:
+            if ('\\usepgfplotslibrary' in line or '\\usetikzlibrary' in line) and 'external' in line:
                 foundExternalize = True
             if 'tikzexternalize[prefix' in line:
                 foundExternalizePrefix = True
