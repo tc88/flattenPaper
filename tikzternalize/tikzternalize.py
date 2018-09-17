@@ -10,6 +10,7 @@
 #
 # prerequisites
 # - all figures must be in one directory, according to figsDir
+# - if \graphicspath is used for \includegraphics, only figsDir must be given as the argument
 # - if externalize library is loaded and its prefix is set in .tex file, it must be done before last \usepackage command
 #
 # commented lines are ignored
@@ -159,7 +160,7 @@ for i in range(0,len(idxTikzBegin)):
     idxBegin = idxTikzBegin[i]-1
     idxEnd = idxTikzEnd[i]-1
     idxDelete = indicesDelete[i]-1
-    contents[idxBegin] = re.sub(r'\\begin{tikzpicture}\[*.*\]*','\\includegraphics{fig'+figIdxTikz[i]+'}',contents[idxBegin])
+    contents[idxBegin] = re.sub(r'\\begin{tikzpicture}\[*.*\]*','\\includegraphics{'+figsDir+'/fig'+figIdxTikz[i]+'}',contents[idxBegin])
     contents[idxEnd] = re.sub(r'\\end{tikzpicture}\s?','',contents[idxEnd])
     if not contents[idxEnd]:
         del contents[idxEnd]
