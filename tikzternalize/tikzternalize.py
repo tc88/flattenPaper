@@ -4,6 +4,8 @@
 # 
 # Usage: - tikzternalize example.tex figsDir
 #
+# Tested under Linux and Windows
+#
 # The figures are numbered according to the figure numbers in the paper. If subfigures are involved, this script supports the subcaption, subfigure and subfig package to add 'a', 'b', [...] to the figure numbers. However, special options of these packages might not be supported
 #
 # prerequisites
