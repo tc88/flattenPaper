@@ -10,6 +10,7 @@
 #
 # prerequisites
 # - all figures must be in one directory, according to figsDir
+# - different figures must have different names, not only different extensions
 # - if \graphicspath is used for \includegraphics, only figsDir must be given as the argument
 # - if externalize library is loaded and its prefix is set in .tex file, it must be done before last \usepackage command
 #
@@ -81,7 +82,7 @@ for num, line in enumerate(f,1):
                 files2move = glob.glob(figPath+figName+'*')
                 for ff in files2move:
                     os.rename(ff,'./'+figsDir+'/')
-                contents[-1] = line.replace(searchResult,'./'+figsDir+'/fig'+str(figCounter)+figIdxSuffix) 
+                contents[-1] = line.replace('{'+searchResult+'}','{./'+figsDir+'/fig'+str(figCounter)+figIdxSuffix+'}')
                 graphicsNames.append(os.path.splitext(os.path.basename(searchResult))[0])
                 figIdxInclude.append(str(figCounter)+figIdxSuffix)
                 figCounter += 1
@@ -100,17 +101,16 @@ for num, line in enumerate(f,1):
                 figCounter += 1
 f.close()
 
-# renames files that are used by includegraphics and includestandalone
+# copy files that are used by includegraphics and includestandalone according to new name
 os.chdir(figsDir)
 for i in range(len(graphicsNames)):
-    print(glob.glob(graphicsNames[i]+'.*'))
-    for figname in glob.glob(graphicsNames[i]+'.*'):
-        new_name = re.sub(graphicsNames[i],'fig'+figIdxInclude[i],figname)
-        # rename files associated to current figure if figure is only used once, otherwise copy them
-        if graphicsNames[i] in graphicsNames[i+1:]:
+    for figname in glob.glob(graphicsNames[i]+'*'):
+        if os.path.splitext(figname)[0] == graphicsNames[i] or "-eps-converted-to" in figname:
+            new_name = re.sub(graphicsNames[i],'fig'+figIdxInclude[i],figname)
             shutil.copyfile(figname,new_name)
-        else:
-            os.rename(figname,new_name)
+            if "-eps-converted-to" in new_name:
+                os.rename(new_name,re.sub("-eps-converted-to","",new_name))
+                os.remove('fig'+figIdxInclude[i]+'.eps')
 os.chdir("..")
 
 # adds tikzexternalizer loading commands
@@ -172,3 +172,12 @@ f = open(filename,'w')
 contents = "".join(contents)
 f.write(contents)
 f.close()
+
+# clean figsDir directory by removing original figure files 
+os.chdir(figsDir)
+for i in range(len(graphicsNames)):
+    for figname in glob.glob(graphicsNames[i]+'*'):
+        os.remove(figname)
+for figname in glob.glob('*.tex'):
+    os.remove(figname)
+os.chdir("..")

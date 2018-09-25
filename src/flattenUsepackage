@@ -3,6 +3,8 @@
 #
 # extracts required packages from private packages loaded in given .tex file such that these packages are loaded directly in .tex-file after de-macro has been applied. All private packages must have the suffix '-private' as required by de-macro.
 #
+# additionally, this script extracts commands from private packages that are not supported by the de-macro tool. These commands are then inserted in the main document.
+#
 # usage: - flattenUsepackage example.tex
 #        - flattenUsepackage example
 #
@@ -49,8 +51,9 @@ if len(packagesPrivate) == 0:
     print('flattenUsepackage: no private packages found')
     exit()
 
-# find required packages of private packages
+# find required packages of private packages and commands not supported by de-macro
 newPackages = {}
+cmdList = ''
 for i in range(len(packagesPrivate)):
     styFile = os.popen("find . -name '" + packagesPrivate[i] + ".sty' -printf '%p'").readlines()[0]
     f = open(styFile,'r')
@@ -67,6 +70,8 @@ for i in range(len(packagesPrivate)):
                             newPackages[package] = list(set(newPackages[package]+options))
                     else:
                         newPackages[package] = options
+        if '\\DeclareMathOperator' in line or '\\DeclareMathAlphabet' in line:
+            cmdList += line
     f.close()
 
 # walk over newPackages and check whether already existent but new options to be added
@@ -98,8 +103,9 @@ for package in packages2add.keys():
     else:
         usepackageAllStr += '\\usepackage['+"".join(packages[package])+']{'+package+'}\n'
 
-# insert all \usepackage lines to LaTeX document
-texContent.insert(line2insert,usepackageAllStr)
+# insert all \usepackage lines and commands from cmdList to LaTeX document
+texContent.insert(line2insert,cmdList)
+texContent.insert(line2insert,usepackageAllStr+'\n')
 
 # write modified tex file
 texContent = "".join(texContent)
