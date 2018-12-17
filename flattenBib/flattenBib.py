@@ -30,7 +30,7 @@ for num, line in enumerate(f,1):
         skipLines = 1
     if skipLines:
         nrSkippedLines += 1
-    if not '\\printbibliography' in line and not '\\bibliography' in line and not skipLines:
+    if not '\\printbibliography' in line and not '\\bibliography' in line and not '\\bibfont' in line and not skipLines:
         contents.append(line)
     if '\\bibliography' in line and line.strip()[0] != '%':
         nrSkippedLines += 1
@@ -41,7 +41,7 @@ for num, line in enumerate(f,1):
         m = re.search('\\\\addbibresource{(.+?)}',line)
         if m: 
             bib_file = m.group(1)
-    if '\\printbibliography' in line:
+    if '\\printbibliography' in line or '\\bibfont' in line:
         nrSkippedLines += 1
     if '\\end{document}' in line:
         bibline = num-nrSkippedLines-1

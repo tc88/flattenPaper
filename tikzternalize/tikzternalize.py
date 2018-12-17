@@ -138,24 +138,30 @@ subprocess.call(["pdflatex", "-shell-escape", filename])
 
 # find line numbers where tikzpicture-environment starts and ends
 f = open(filename,'r')
-contents = []       # collects file content in array of lines
-idxTikzBegin = []   # line where tikz environment starts
-idxTikzEnd = []     # line where tikz environment ends
-indicesDelete = []  # lines that shall be removed (that contain tikzsetfilename)
+contents = []             # collects file content in array of lines
+idxTikzBegin = []         # line where tikz environment starts
+idxTikzEnd = []           # line where tikz environment ends
+indicesDelete = []        # lines that shall be removed (that contain tikzsetfilename)
+insideTikzEnviron = False # indicator whether inside of a tikz environment
 for num, line in enumerate(f,1):
     contents.append(line)
-    if '\\tikzsetnextfilename' in line:
-        indicesDelete.append(num)
-    if '\\begin{tikzpicture}' in line:
-        idxTikzBegin.append(num)
     if '\\end{tikzpicture}' in line:
-        idxTikzEnd.append(num)
+        insideTikzEnviron = False
+    if not insideTikzEnviron:
+        if '\\tikzsetnextfilename' in line:
+            indicesDelete.append(num)
+        if '\\begin{tikzpicture}' in line:
+            idxTikzBegin.append(num)
+            insideTikzEnviron = True
+        if '\\end{tikzpicture}' in line:
+            idxTikzEnd.append(num)
 f.close()
 
 # replaces tikzpicture environments with includegraphics commands
 idxTikzBegin.reverse()
 idxTikzEnd.reverse()
 indicesDelete.reverse()
+
 for i in range(0,len(idxTikzBegin)):
     idxBegin = idxTikzBegin[i]-1
     idxEnd = idxTikzEnd[i]-1

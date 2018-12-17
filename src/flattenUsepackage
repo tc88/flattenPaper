@@ -74,11 +74,11 @@ for i in range(len(packagesPrivate)):
             cmdList += line
     f.close()
 
-# walk over newPackages and check whether already existent but new options to be added
+# walk over newPackages and check whether already existent package but new options to be added
 packages2add = newPackages.copy()
 for package in newPackages:
     if package in packages:
-        for i in range(line2insert):
+        for i in range(line2insert): # iterate over all lines containing \usepackage commands
             if package in texContent[i]:
                 match = re.search('\\\\usepackage(.*){(.*)}',texContent[i])
                 if match:
@@ -89,7 +89,7 @@ for package in newPackages:
                 if optionsStr and ',' in foundPackages:
                     print('not sure whether multiple packages can be loaded when options are given, exiting ...')
                     exit()
-                elif optionsStr:
+                elif optionsStr: # replacing LaTeX line with modified line
                     texContent[i] = '\\usepackage['+optionsStr+']{'+foundPackages+'}\n'
                 else:
                     texContent[i] = '\\usepackage{'+foundPackages+'}\n'
@@ -100,8 +100,8 @@ usepackageAllStr = ''
 for package in packages2add.keys():
     if len(packages2add[package]) == 1 and packages2add[package][0] == '':
         usepackageAllStr += '\\usepackage{'+package+'}\n' 
-    else:
-        usepackageAllStr += '\\usepackage['+"".join(packages[package])+']{'+package+'}\n'
+    elif not package in packages:
+        usepackageAllStr += '\\usepackage['+"".join(packages2add[package])+']{'+package+'}\n'
 
 # insert all \usepackage lines and commands from cmdList to LaTeX document
 texContent.insert(line2insert,cmdList)
