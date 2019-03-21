@@ -47,7 +47,7 @@ graphicsNames = []                # collects all file names that were originally
 foundExternalize = False          # initializes switch whether externalize library is already used
 foundExternalizePrefix = False    # initializes switch whether prefix of externalize library is already set
 lastUsepackage = 0                # line of last usepackage use in main .tex file
-figCounter = 1                    # top level figure counter
+figCounter = 0                    # top level figure counter
 insideTikzEnviron = False         # indicator whether inside of a tikz environment
 for num, line in enumerate(f,1):
     contents.append(line)
@@ -55,12 +55,13 @@ for num, line in enumerate(f,1):
         if '\\end{tikzpicture}' in line:
             insideTikzEnviron = False
         if not insideTikzEnviron: # only check for new figures if outside of any tikz environment
+            if '\\begin{figure}' in line:
+                figCounter += 1
             if '\\begin{subfigure}' in line or '\\subfloat' in line or '\\subfigure' in line:
                 if not figIdxSuffix:
                     figIdxSuffix = 'a'
                 else:
                     figIdxSuffix = chr(ord(figIdxSuffix)+1)
-                    figCounter -= 1;
             if '\\end{figure}' in line or '\\end{figure*}' in line:
                 figIdxSuffix = '';
             if ('\\usepgfplotslibrary' in line or '\\usetikzlibrary' in line) and 'external' in line:
@@ -73,7 +74,6 @@ for num, line in enumerate(f,1):
                 insideTikzEnviron = True
                 lineIdxTikz.append(num)
                 figIdxTikz.append(str(figCounter)+figIdxSuffix)
-                figCounter += 1
             if '\\includegraphics' in line:
                 match = re.search(r'includegraphics.*{(.+?)}',line)
                 searchResult = match.group(1)
@@ -85,7 +85,6 @@ for num, line in enumerate(f,1):
                 contents[-1] = line.replace('{'+searchResult+'}','{./'+figsDir+'/fig'+str(figCounter)+figIdxSuffix+'}')
                 graphicsNames.append(os.path.splitext(os.path.basename(searchResult))[0])
                 figIdxInclude.append(str(figCounter)+figIdxSuffix)
-                figCounter += 1
             if '\\includestandalone' in line:
                 match = re.search(r'includestandalone.*{(.+?)}',line)
                 searchResult = match.group(1)
@@ -98,7 +97,6 @@ for num, line in enumerate(f,1):
                 contents[-1] = contents[-1].replace('includestandalone','includegraphics') 
                 graphicsNames.append(os.path.splitext(os.path.basename(searchResult))[0])
                 figIdxInclude.append(str(figCounter)+figIdxSuffix)
-                figCounter += 1
 f.close()
 
 # copy files that are used by includegraphics and includestandalone according to new name
@@ -110,8 +108,9 @@ for i in range(len(graphicsNames)):
             shutil.copyfile(figname,new_name)
             if "-eps-converted-to" in new_name:
                 os.rename(new_name,re.sub("-eps-converted-to","",new_name))
-                os.remove('fig'+figIdxInclude[i]+'.eps')
-os.chdir("..")
+                if os.path.isfile('fig'+figIdxInclude[i]+'.eps'):
+                    os.remove('fig'+figIdxInclude[i]+'.eps')
+os.chdir('..')
 
 # adds tikzexternalizer loading commands
 if lastUsepackage != 0:

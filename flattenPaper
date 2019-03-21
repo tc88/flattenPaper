@@ -38,6 +38,16 @@ echo " created in October 2016";
 VERSION=0.0.1
 USAGE="'Usage: flattenPaper texFile pkgPrefix figsDir'. For more details, call 'flattenPaper -h'"
 
+# get directory of this file (to follow symlinks, this complicated multi-line form is required)
+# see https://stackoverflow.com/questions/59895/get-the-source-directory-of-a-bash-script-from-within-the-script-itself/246128#246128
+SOURCE="${BASH_SOURCE[0]}"
+while [ -h "$SOURCE" ]; do # resolve $SOURCE until the file is no longer a symlink
+  DIR="$( cd -P "$( dirname "$SOURCE" )" >/dev/null 2>&1 && pwd )"
+  SOURCE="$(readlink "$SOURCE")"
+  [[ $SOURCE != /* ]] && SOURCE="$DIR/$SOURCE" # if $SOURCE was a relative symlink, we need to resolve it relative to the path where the symlink file was located
+done
+BASEDIR="$( cd -P "$( dirname "$SOURCE" )" >/dev/null 2>&1 && pwd )"
+
 # --- Options -----------------------------------------------------------------------------------------------
 
 if [ $# == 0 ] ; then
@@ -102,9 +112,10 @@ if [ ! -z "$DUPLICATES" ]; then
     exit 1;
 fi
 
-# move all required source files from paper directory to new $DEST directory
+# copy all required source files from paper directory to new $DEST directory
 mkdir $DEST
 cp -t $DEST *.tex *.cls *.clo *.bib 2>>/dev/null
+cp -t $DEST $BASEDIR/flatPaper.bst #2>>/dev/null
 find . -name '*.sty' -print0 | xargs -0 cp -t $DEST
 cp -r $FIGS/ $DEST 2>>/dev/null
 cp -r figsStandalone/ $DEST 2>>/dev/null
@@ -137,6 +148,7 @@ sed -i "s/\\usepackage\(\[\?.*\]\?\){$PKGPREFIX-\(.*\)}/\\\\usepackage\1{$PKGPRE
 sed -i 's/\\\\usepackage/\\usepackage/g' $flattened.tex # correct problem introduced by previous line
 $SRC/rmLatexPackageOptions $flattened.tex
 find . -name '*.sty' -print0 | xargs -0 sed -i 's/\\newcommand\*/\\newcommand/g' # remove star from \newcommand since not supported by de-macro
+find . -name '*.sty' -print0 | xargs -0 sed -i 's/\\renewcommand\*/\\renewcommand/g' # remove star from \renewcommand since not supported by de-macro
 $SRC/flattenUsepackage $flattened.tex
 if [ -f "$PKGPREFIX-acronyms-private.sty" ]; then
     $SRC/flattenGlossary $flattened.tex "$PKGPREFIX-acronyms-private.sty"
@@ -192,7 +204,7 @@ if [ -d figsStandalone ]; then
 fi
 
 # clean up $DEST directory
-rm ${flattened}_bib.tex *.suc *.syc *.upa *.upb *.aux *.auxlock *.log *.pdf *.bcf *.run.xml *.blg *.out 2>>/dev/null
+rm ${flattened}_bib.tex *.bst *.suc *.syc *.upa *.upb *.aux *.auxlock *.log *.pdf *.bcf *.run.xml *.blg *.out 2>>/dev/null
 rm -r tabs
 
 # write compile file

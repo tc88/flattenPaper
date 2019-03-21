@@ -55,7 +55,7 @@ bib_file = os.path.splitext(os.path.basename(bib_file))[0]
 # only continue if a bib_file to be flattened has been found
 if bib_file:
     # inserts the commands required by bibtex
-    contents.insert(bibline,'\\bibliographystyle{unsrt}\n')
+    contents.insert(bibline,'\\bibliographystyle{flatPaper}\n')
     contents.insert(bibline+1,'\\bibliography{'+bib_file+'}\n')
     contents = "".join(contents)
 
