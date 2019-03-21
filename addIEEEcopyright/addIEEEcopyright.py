@@ -22,7 +22,7 @@ for num, line in enumerate(f,1):
         idxLastUsepackage = num
 f.close()
 
-copyrightNotice='\\AddToShipoutPicture*{\\footnotesize\\sffamily\\raisebox{1cm}{\\hspace{1.65cm}\\fbox{\\parbox{\\textwidth}{\\copyright~2016 IEEE. Personal use of this material is permitted. Permission from IEEE must be obtained for all other uses, in any current or future media, including reprinting/republishing this material for advertising or promotional purposes, creating new collective works, for resale or redistribution to servers or lists, or reuse of any copyrighted component of this work in other works.}}}}'
+copyrightNotice='\\AddToShipoutPicture*{\\footnotesize\\sffamily\\raisebox{1cm}{\\hspace{1.65cm}\\fbox{\\parbox{\\textwidth}{\\copyright~20xx IEEE. Personal use of this material is permitted. Permission from IEEE must be obtained for all other uses, in any current or future media, including reprinting/republishing this material for advertising or promotional purposes, creating new collective works, for resale or redistribution to servers or lists, or reuse of any copyrighted component of this work in other works.}}}}'
 if idxLastUsepackage != 0:
     contents.insert(idxLastUsepackage,'\\usepackage{eso-pic}\n\n'+copyrightNotice+'\n') 
 
