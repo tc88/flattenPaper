@@ -38,6 +38,7 @@ echo " created in October 2016";
 }
 
 VERSION=0.0.1
+VERBOSE=0
 USAGE="'Usage: flattenPaper texFile pkgPrefix figsDir'. For more details, call 'flattenPaper -h'"
 
 # get directory of this file (to follow symlinks, this complicated multi-line form is required)
@@ -58,16 +59,21 @@ if [ $# == 0 ] ; then
 fi
 
 # getopts does not support long options, however, getopt does not work on, e.g., BSD systems
-while getopts "h" options; do
+while getopts "h v" options; do
     case $options in
         h ) help
             exit 0
+            ;;
+        v ) VERBOSE=1
             ;;
        \? ) echo $USAGE
             exit 1
             ;;
     esac
 done
+
+# shift positional parameters depending on number of optional parameters
+shift $(($OPTIND - 1))
 
 # --- Compatibility -----------------------------------------------------------------------------------------
 
@@ -144,13 +150,13 @@ mv $flattened.tmp $flattened.tex
 mv $GLSENTRIES.tmp $GLSENTRIES.tex
 
 # flatten bib
-$SRC/flattenBib $flattened
+$SRC/flattenBib $flattened $VERBOSE
 
 # apply latexpand again to remove comments
 latexpand $flattened.tex | sponge $flattened.tex
 
 # calls tikzternalize to produce .pdf files for all used tikzpictures in order to hide the source codes
-$SRC/tikzternalize $flattened.tex $FIGS
+$SRC/tikzternalize $flattened.tex $FIGS $VERBOSE
 sed -i '/\\input{tudcolours\.def}/d' $flattened.tex
 
 # add IEEE copyright notice

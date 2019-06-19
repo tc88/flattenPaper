@@ -32,11 +32,13 @@ print("shadowing figure sources by applying tikzternalize ...")
 parser = argparse.ArgumentParser()
 parser.add_argument("tex_file", help=".tex-file that shall be modified")
 parser.add_argument("figsDir" , help="directory, in which ALL figures are contained")
+parser.add_argument("verbose" , help="verbosity of terminal output")
 # example how to include additional optional arguments
 # parser.add_argument("-c","--createPDF", help="use if you want to create the .pdf directly",action="store_true")
 parser_args = parser.parse_args()
 filename = parser_args.tex_file
 figsDir = parser_args.figsDir
+verbose = int(parser_args.verbose)
 
 # reads .tex file and mainly saves line numbers for tikz pictures and the file names of includegraphics files
 f = open(filename,'r')
@@ -83,7 +85,7 @@ for num, line in enumerate(f,1):
                 figName = os.path.basename(searchResult)
                 files2move = glob.glob(figPath+figName+'*')
                 for ff in files2move:
-                    os.rename(ff,'./'+figsDir+'/')
+                    os.rename(ff,'./'+figsDir+'/'+os.path.basename(ff))
                 contents[-1] = line.replace('{'+searchResult+'}','{./'+figsDir+'/fig'+str(figCounter)+figIdxSuffix+'}')
                 graphicsNames.append(os.path.splitext(os.path.basename(searchResult))[0])
                 figIdxInclude.append(str(figCounter)+figIdxSuffix)
@@ -136,7 +138,10 @@ f.close()
 
 # call pdflatex to let tikzexternalizer do its work
 FNULL = open(os.devnull,'w')
-subprocess.call(["pdflatex", "-shell-escape", filename],stdout=FNULL)
+if verbose:
+    subprocess.call(["pdflatex", "-shell-escape", filename])
+else:
+    subprocess.call(["pdflatex", "-shell-escape", filename],stdout=FNULL)
 
 # find line numbers where tikzpicture-environment starts and ends
 f = open(filename,'r')
