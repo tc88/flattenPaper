@@ -15,6 +15,8 @@ import os
 import argparse
 import re
 
+print("flattening \usepackage ...")
+
 # parse input arguments
 parser = argparse.ArgumentParser()
 parser.add_argument("tex_file", help="the .tex-file that shall be modified")
@@ -112,3 +114,5 @@ texContent = "".join(texContent)
 f = open(texFile+'.tex','w')
 f.write(texContent)
 f.close()
+
+print("finished flattening \usepackage.")

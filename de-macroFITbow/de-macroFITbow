@@ -13,6 +13,8 @@ import os
 import argparse
 import fnmatch
 
+print("de-macrofies FIT-related bow commands ...")
+
 # parse input arguments
 parser = argparse.ArgumentParser()
 parser.add_argument("tex_file", help="the .tex-file that shall be modified")
@@ -75,3 +77,5 @@ f.close()
 f = open(styFile,'w')
 f.write(styContent)
 f.close()
+
+print("finished de-macrofying bow commands.")

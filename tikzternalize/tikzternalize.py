@@ -26,6 +26,8 @@ import re
 import glob
 import shutil
 
+print("shadowing figure sources by applying tikzternalize ...")
+
 # parse input arguments
 parser = argparse.ArgumentParser()
 parser.add_argument("tex_file", help=".tex-file that shall be modified")
@@ -55,7 +57,7 @@ for num, line in enumerate(f,1):
         if '\\end{tikzpicture}' in line:
             insideTikzEnviron = False
         if not insideTikzEnviron: # only check for new figures if outside of any tikz environment
-            if '\\begin{figure}' in line:
+            if '\\begin{figure}' in line or '\\begin{figure*}' in line:
                 figCounter += 1
             if '\\begin{subfigure}' in line or '\\subfloat' in line or '\\subfigure' in line:
                 if not figIdxSuffix:
@@ -124,7 +126,7 @@ if len(lineIdxTikz) != 0:
     lineIdxTikz.reverse() # walk backwards since additional lines are to be included
     figIdxTikz.reverse() # walk backwards since additional lines are to be included
     for i in range(len(figIdxTikz)):
-        contents.insert(lineIdxTikz[i], '\\tikzsetnextfilename{fig'+figIdxTikz[i]+'}\n')
+        contents.insert(lineIdxTikz[i]+1, '\\tikzsetnextfilename{fig'+figIdxTikz[i]+'}\n')
 
 # write modified contents back to file
 f = open(filename,'w')
@@ -133,7 +135,8 @@ f.write(contents)
 f.close()
 
 # call pdflatex to let tikzexternalizer do its work
-subprocess.call(["pdflatex", "-shell-escape", filename])
+FNULL = open(os.devnull,'w')
+subprocess.call(["pdflatex", "-shell-escape", filename],stdout=FNULL)
 
 # find line numbers where tikzpicture-environment starts and ends
 f = open(filename,'r')
@@ -186,3 +189,5 @@ for i in range(len(graphicsNames)):
 for figname in glob.glob('*.tex'):
     os.remove(figname)
 os.chdir("..")
+
+print("finished applying tikzternalize.")

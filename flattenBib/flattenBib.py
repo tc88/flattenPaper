@@ -12,6 +12,8 @@ import subprocess
 import re
 import sys
 
+print "flattening bibliography ..."
+
 # parse input arguments
 parser = argparse.ArgumentParser()
 parser.add_argument("tex_file", help="the .tex-file that shall be modified")
@@ -44,7 +46,7 @@ for num, line in enumerate(f,1):
     if '\\printbibliography' in line or '\\bibfont' in line:
         nrSkippedLines += 1
     if '\\end{document}' in line:
-        bibline = num-nrSkippedLines-1
+        bibline = num-nrSkippedLines-2
     if 'END BIBLIOGRAPHY SETUP' in line:
         skipLines = 0
 f.close()
@@ -72,8 +74,9 @@ if bib_file:
         os.remove(filename+'.bbl')
 
     # call pdflatex and bibtex to generate .bbl file
-    subprocess.call(["pdflatex", "-shell-escape", filename])
-    subprocess.call(["bibtex", filename])
+    FNULL = open(os.devnull,'w')
+    subprocess.call(["pdflatex", "-shell-escape", filename],stdout=FNULL)
+    subprocess.call(["bibtex", filename],stdout=FNULL)
     os.rename(filename+'.bbl',filename+'_bib.tex')
 
     # reads in .tex file's content without bib commands again and save index of line where to insert .bbl file
@@ -101,3 +104,11 @@ if bib_file:
 
     # remove original .bib file that represents the full library, the required entries are now in filename_bib.tex
     os.remove(bib_file+'.bib')
+
+    # replacing '_' with '\_' in second argument of '\href{}{}' command, since escaping is required (using a recursive approach with sed). For performance and/or compatibility, this could be implemented directly in Python.
+    subprocess.call(["sed","-e",":loop","-e",r"s/\(\\href{.*}\)\({.*\)[^\]_\(.*}\)/\1\2\\_\3/g","-e","t loop","-i",filename+'_bib.tex'])
+
+    # test run
+    subprocess.call(["pdflatex",filename],stdout=FNULL)
+
+    print("finished flattening bibliography.")
