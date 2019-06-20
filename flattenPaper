@@ -138,8 +138,7 @@ cp -r figsStandalone/ $DEST 2>>/dev/null
 cp -r tabs/ $DEST 2>>/dev/null
 
 # support for \loadglsentries
-GLSENTRIES=$(cat $TEXFILE.tex | grep loadglsentries | sed -n 's/\\loadglsentries{//p' | sed -n 's/}//p')
-GLSENTRIES=$(basename $GLSENTRIES .tex)
+sed -i 's/\\loadglsentries/\\input/g' $TEXFILE.tex
 
 # flatten the latex code using latexpand and keep comments to subsequently flatten bib
 latexpand --keep-comments $TEXFILE.tex > $DEST/$flattened.tmp
@@ -246,7 +245,7 @@ chmod +x compile
 echo "#!/bin/bash" >> zipme
 echo "rm -v "$flattened.zip" 2>>/dev/null" >> zipme
 echo "echo 'zipping flattened paper ...'"
-echo "zip" $flattened.zip $flattened.tex $FIGS"/* >>/dev/null" >> zipme
+echo "zip" $flattened.zip $flattened.tex *.csv *.pdf $FIGS"/* >>/dev/null" >> zipme
 echo "echo 'finished zipping flattened paper.'"
 chmod +x zipme
 
