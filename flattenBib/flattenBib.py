@@ -53,11 +53,11 @@ for num, line in enumerate(f,1):
         skipLines = 0
 f.close()
 
-# strip extension of bib_file if present
-bib_file = os.path.splitext(os.path.basename(bib_file))[0]
-
 # only continue if a bib_file to be flattened has been found
 if bib_file:
+    # strip extension of bib_file if present
+    bib_file = os.path.splitext(os.path.basename(bib_file))[0]
+
     # inserts the commands required by bibtex
     contents.insert(bibline,'\\bibliographystyle{flatPaper}\n')
     contents.insert(bibline+1,'\\bibliography{'+bib_file+'}\n')
@@ -119,5 +119,7 @@ if bib_file:
         subprocess.call(["pdflatex",filename])
     else:
         subprocess.call(["pdflatex",filename],stdout=FNULL)
+else:
+    print("no bib file was detected. Thus, there was nothing to do.")
 
-    print("finished flattening bibliography.")
+print("finished flattening bibliography.")
