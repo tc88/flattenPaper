@@ -3,25 +3,27 @@
 function help () {
 echo " This script prepares a paper source code to be published to arxiv. It needs to be called with the name of the main .tex file (without extension) that is located in the current directory";
 echo "";
-echo " Usage: flattenPaper texFile pkgPrefix figsDir";
-echo " Example usage: flattenPaper paper casper figs";
-echo " Here, 'texFile' is a .tex file, 'pkgPrefix' the prefix for any private macro files apart from temf-* macros and 'figsDir' the directory in which all figures are contained.";
+echo " Usage: flattenPaper texFile pkgPrefix figsDir [figsDirAdditional]";
+echo " Example usage: flattenPaper paper casper figs images pics";
+echo " Here, 'texFile' is a .tex file, 'pkgPrefix' the prefix for any private macro files apart from temf-* macros and 'figsDir' a directory that contains the figures. 'figsDir' is also used in the flattened version of the paper and will contain the .pdf files of the figures. If additional directories for figure sources are used, they can be specified using the optional parameter 'figsDirAdditional'.";
 echo "";
 echo " Supported source files:";
 echo " - *.tex, *.sty, *.cls, *.clo, *.bib";
 echo "";
 echo " Prerequisites:";
-echo " - all figures must be contained in one folder according to the input parameter 'figs'";
+echo " - all figures must be contained in sub-directories according to the input parameters 'figsDir' and 'figsDirAdditional'";
+echo " - figures in the root directory of the paper are not supported'";
 echo " - different figures must have different names, not only different extensions";
 echo " - packages are loaded without using any additional path";
 echo " - do not load more than one package for each \usepackage command";
-echo " - if standalone figures are used together with the standalone package, they must be included with the \includestandalone macro (see standalone package documentation) instead of \input or \include. The filename of the standalone figure must be given without extension, e.g., 'example' instead of 'example.tex' and the files must be contained in a folder called 'figsStandalone'. Additionally, the standalone package option 'mode=build', 'mode=buildmissing' or 'mode=buildnew' must be used";
+echo " - if standalone figures are used together with the standalone package, they must be included using the \includestandalone macro (see standalone package documentation) instead of \input or \include. This is due to a limitation of latexpand that does not recognize standalone input files. The filename of the standalone figure must be given without extension, e.g., 'example' instead of 'example.tex'. Additionally, the standalone package option 'mode=build', 'mode=buildmissing' or 'mode=buildnew' must be used";
 echo " - enclose all bib setup lines in the preamble into a beginning line containing BEGIN BIBLIOGRAPHY SETUP and an ending line END BIBLIOGRAPHY SETUP. DO NOT use any other commands than \bibliographystyle, \bibliography and \printbibliography within \begin{document} and \end{document}.";
 echo " - no TUD colors must be used outside of figures";
 echo " - if figures include references to anything in the rest of the LaTeX document, they must be included directly in the LaTeX document or by the \input command";
-echo " - if the standalone package is used, all standalone files must be included using the \includestandalone command. This is due to a limitation of latexpand that does not recognize standalone input files.";
-echo " - all custom packages that are not present in a standard LaTeX installation must be present as .sty-files in the current directory or any of its subdirectories.";
+echo " - all custom packages that are not present in a standard LaTeX installation must be present as .sty-files in the current directory or any of its sub-directories.";
 echo " - if the 'comment' package is used, \begin{comment} ... \end{comment} blocks must be removed before applying flattenPaper.";
+echo " - applying tikzexternalize to the paper must be working. However, when flattening the paper, \usetikzlibrary{external} must be removed on beforehand.";
+echo " - in one line, there must always only be one figure file that is included.";
 echo "";
 echo " Required tools that must be installed:";
 echo " - rename";
@@ -84,17 +86,19 @@ hash latexpand 2>/dev/null || { echo >&2 "I require latexpand but it's not insta
 hash de-macro 2>/dev/null  || { echo >&2 "I require de-macro but it's not installed. Aborting.";  exit 1; }
 
 # --- Parsing input -----------------------------------------------------------------------------------------
-
 TEXFILE=$1
 if [ $2 ]; then
     PKGPREFIX=$2
 else
     PKGPREFIX=###   # dummy, must not be matched by rename command
 fi
-if [ $3 ]; then
-    FIGS=$3
+shift 2
+if [ ${#@} -gt 1 ]; then
+    FIGS=$@
+    FIGS4PDF=$1
 else
     FIGS=images
+    FIGS4PDF=images
 fi
 
 # --- Body --------------------------------------------------------------------------------------------------
@@ -132,10 +136,11 @@ fi
 mkdir $DEST
 cp -t $DEST *.tex *.cls *.clo *.bib *.csv *.pdf 2>>/dev/null
 cp -t $DEST $BASEDIR/flatPaper.bst #2>>/dev/null
-find . -name '*.sty' -print0 | xargs -0 cp -t $DEST
-cp -r $FIGS/ $DEST 2>>/dev/null
-cp -r figsStandalone/ $DEST 2>>/dev/null
-cp -r tabs/ $DEST 2>>/dev/null
+find . -name '*.sty' -print0 | xargs -0 cp -t $DEST 2>>/dev/null
+for currentDir in $FIGS
+do
+    cp -r "$currentDir" $DEST 2>>/dev/null
+done
 
 # support for \loadglsentries
 sed -i 's/\\loadglsentries/\\input/g' $TEXFILE.tex
@@ -143,10 +148,10 @@ sed -i 's/\\loadglsentries/\\input/g' $TEXFILE.tex
 # flatten the latex code using latexpand and keep comments to subsequently flatten bib
 latexpand --keep-comments $TEXFILE.tex > $DEST/$flattened.tmp
 cd $DEST
-mv $GLSENTRIES.tex $GLSENTRIES.tmp
-rm *.tex
-mv $flattened.tmp $flattened.tex
-mv $GLSENTRIES.tmp $GLSENTRIES.tex
+mv $GLSENTRIES.tex $GLSENTRIES.tmp 2>>/dev/null
+rm *.tex 2>>/dev/null
+mv $flattened.tmp $flattened.tex 2>>/dev/null
+mv $GLSENTRIES.tmp $GLSENTRIES.tex 2>>/dev/null
 
 # flatten bib
 $SRC/flattenBib $flattened $VERBOSE
@@ -155,7 +160,7 @@ $SRC/flattenBib $flattened $VERBOSE
 latexpand $flattened.tex | sponge $flattened.tex
 
 # calls tikzternalize to produce .pdf files for all used tikzpictures in order to hide the source codes
-$SRC/tikzternalize $flattened.tex $FIGS $VERBOSE
+$SRC/tikzternalize $flattened.tex $FIGS4PDF $VERBOSE
 sed -i '/\\input{tudcolours\.def}/d' $flattened.tex
 
 # add IEEE copyright notice
@@ -168,14 +173,14 @@ sed -i 's/\\usepackage\(\[\?.*\]\?\){temf-\(.*\)}/\\usepackage\1{temf-\2-private
 sed -i "s/\\usepackage\(\[\?.*\]\?\){$PKGPREFIX-\(.*\)}/\\\\usepackage\1{$PKGPREFIX-\2-private}/g" $flattened.tex
 sed -i 's/\\\\usepackage/\\usepackage/g' $flattened.tex # correct problem introduced by previous line
 $SRC/rmLatexPackageOptions $flattened.tex
-find . -name '*.sty' -print0 | xargs -0 sed -i 's/\\newcommand\*/\\newcommand/g' # remove star from \newcommand since not supported by de-macro
-find . -name '*.sty' -print0 | xargs -0 sed -i 's/\\renewcommand\*/\\renewcommand/g' # remove star from \renewcommand since not supported by de-macro
+find . -name '*.sty' -print0 | xargs -0 sed -i 's/\\newcommand\*/\\newcommand/g' 2>>/dev/null # remove star from \newcommand since not supported by de-macro
+find . -name '*.sty' -print0 | xargs -0 sed -i 's/\\renewcommand\*/\\renewcommand/g' 2>>/dev/null # remove star from \renewcommand since not supported by de-macro
 $SRC/flattenUsepackage $flattened.tex
 if [ -f "$PKGPREFIX-acronyms-private.sty" ]; then
     $SRC/flattenGlossary $flattened.tex "$PKGPREFIX-acronyms-private.sty"
 fi
 $SRC/de-macroFITbow $flattened.tex
-de-macro       $flattened.tex
+de-macro $flattened.tex >>/dev/null
 mv $flattened-clean.tex $flattened.tex
 rm $flattened # remove unused by de-macro created binary file
 rm temf*-private.sty $PKGPREFIX-*-private.sty 2>>/dev/null
@@ -202,7 +207,7 @@ sed -i '/\\let.*\\undefined/d' $flattened.tex
 cat -s $flattened.tex | sponge $flattened.tex 
 
 # clean up figs directory
-cd $FIGS
+cd $FIGS4PDF
 mkdir tmp
 mv -t tmp fig*.pdf fig*.eps fig*.png fig*.jpg 2>>/dev/null
 mv tmp ..
@@ -226,16 +231,21 @@ if [ -d figsStandalone ]; then
 fi
 
 # clean up $DEST directory
-rm ${flattened}_bib.tex *.bst *.spl *.suc *.syc *.upa *.upb *.aux *.auxlock *.log *.pdf *.bcf *.run.xml *.blg *.out 2>>/dev/null
+rm ${flattened}_bib.tex *.bst *.thm *.spl *.suc *.syc *.upa *.upb *.aux *.auxlock *.log *.pdf *.bcf *.run.xml *.blg *.out 2>>/dev/null
 rm -r tabs 2>>/dev/null
 
 # write compile file
 echo "#!/bin/bash" >> compile
 echo "echo 'compiling PDF file ...'" >> compile
-echo "pdflatex "$flattened.tex" >>/dev/null" >> compile
-echo "pdflatex "$flattened.tex" >>/dev/null" >> compile
-echo "echo 'finished compiling PDF.'" >> compile
+if [ "$VERBOSE" = 1 ]; then
+    echo "pdflatex "$flattened.tex"" >> compile
+    echo "pdflatex "$flattened.tex"" >> compile
+else
+    echo "pdflatex "$flattened.tex" >>/dev/null" >> compile
+    echo "pdflatex "$flattened.tex" >>/dev/null" >> compile
+fi
 echo "rm *.out *.spl *.aux *.log 2>>/dev/null" >> compile
+echo "echo 'finished compiling PDF.'" >> compile
 chmod +x compile
 
 # execute compile
@@ -244,9 +254,9 @@ chmod +x compile
 # write zipme file
 echo "#!/bin/bash" >> zipme
 echo "rm -v "$flattened.zip" 2>>/dev/null" >> zipme
-echo "echo 'zipping flattened paper ...'"
-echo "zip" $flattened.zip $flattened.tex *.csv *.pdf $FIGS"/* >>/dev/null" >> zipme
-echo "echo 'finished zipping flattened paper.'"
+echo "zipping flattened paper ..."
+echo "zip" $flattened.zip $flattened.tex *.cls *.csv *.pdf $FIGS4PDF"/* >>/dev/null" >> zipme
+echo "finished zipping flattened paper."
 chmod +x zipme
 
 # execute zipme
