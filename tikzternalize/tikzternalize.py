@@ -45,7 +45,8 @@ f = open(filename,'r')
 contents = []                     # collects file content in array of lines
 lineIdxTikz = []                  # collects all first lines of a tikzpicture environment 
 figIdxTikz = []                   # collects all figure indices of tikzpicture figures
-figIdxInclude = []                # collects all figure indices of includegraphics figures
+figIdxInclude = []                # collects all figure indices of \include* figures
+figIdxIncludeLineNo = []          # collects line numbers of \include* figures
 figIdxSuffix = ''                 # handles to add letter if subfigures are used
 graphicsNames = []                # collects all file names that were originally included using includegraphics
 foundExternalize = False          # initializes switch whether externalize library is already used
@@ -89,6 +90,7 @@ for num, line in enumerate(f,1):
                 contents[-1] = line.replace('{'+searchResult+'}','{./'+figsDir+'/fig'+str(figCounter)+figIdxSuffix+'}')
                 graphicsNames.append(os.path.splitext(os.path.basename(searchResult))[0])
                 figIdxInclude.append(str(figCounter)+figIdxSuffix)
+                figIdxIncludeLineNo.append(num)
             if '\\includestandalone' in line:
                 match = re.search(r'includestandalone.*{(.+?)}',line)
                 searchResult = match.group(1)
@@ -101,7 +103,22 @@ for num, line in enumerate(f,1):
                 contents[-1] = contents[-1].replace('includestandalone','includegraphics') 
                 graphicsNames.append(os.path.splitext(os.path.basename(searchResult))[0])
                 figIdxInclude.append(str(figCounter)+figIdxSuffix)
+                figIdxIncludeLineNo.append(num)
 f.close()
+
+# modify \include* commands by appending {'a','b',...} to the file names such that no duplicate entries exist (occurs when multiple \includegraphics commands are used in one figure environment)
+suffix = 'a'
+temp = figIdxInclude[:]
+for i in range(len(figIdxInclude)):
+    line = contents[figIdxIncludeLineNo[i]-1]
+    if i<len(figIdxInclude)-1 and figIdxInclude[i] == figIdxInclude[i+1]:
+        temp[i] = figIdxInclude[i]+suffix
+        contents[figIdxIncludeLineNo[i]-1] = line.replace('fig'+figIdxInclude[i],'fig'+figIdxInclude[i]+suffix)
+        suffix = chr(ord(suffix)+1)
+if figIdxInclude[-1] == figIdxInclude[-2]:
+    temp[-1] = figIdxInclude[-1]+suffix
+    contents[figIdxIncludeLineNo[-1]-1] = line.replace('fig'+figIdxInclude[-1],'fig'+figIdxInclude[-1]+suffix)
+figIdxInclude = temp
 
 # copy files that are used by includegraphics and includestandalone according to new name
 os.chdir(figsDir)
