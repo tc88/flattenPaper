@@ -115,7 +115,7 @@ for i in range(len(figIdxInclude)):
         temp[i] = figIdxInclude[i]+suffix
         contents[figIdxIncludeLineNo[i]-1] = line.replace('fig'+figIdxInclude[i],'fig'+figIdxInclude[i]+suffix)
         suffix = chr(ord(suffix)+1)
-if figIdxInclude[-1] == figIdxInclude[-2]:
+if len(figIdxInclude) > 1 and figIdxInclude[-1] == figIdxInclude[-2]:
     temp[-1] = figIdxInclude[-1]+suffix
     contents[figIdxIncludeLineNo[-1]-1] = line.replace('fig'+figIdxInclude[-1],'fig'+figIdxInclude[-1]+suffix)
 figIdxInclude = temp
