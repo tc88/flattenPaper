@@ -5,7 +5,7 @@ echo " This script prepares a paper source code to be published to arxiv. It nee
 echo "";
 echo " Usage: flattenPaper texFile pkgPrefix figsDir [figsDirAdditional]";
 echo " Example usage: flattenPaper paper casper figs images pics";
-echo " Here, 'texFile' is a .tex file, 'pkgPrefix' the prefix for any private macro files apart from temf-* macros and 'figsDir' a directory that contains the figures. 'figsDir' is also used in the flattened version of the paper and will contain the .pdf files of the figures. If additional directories for figure sources are used, they can be specified using the optional parameter 'figsDirAdditional'.";
+echo " Here, 'texFile' is a .tex file, 'pkgPrefix' the prefix for any private macro files apart from temf-* macros and 'figsDir' a directory that contains the figures. 'figsDir' is also used in the flattened version of the paper and will contain the .pdf files of the figures. If additional directories for figure sources are used, they can be specified using the optional parameter 'figsDirAdditional'. The directory name 'build' is not allowed";
 echo "";
 echo " Supported source files:";
 echo " - *.tex, *.sty, *.cls, *.clo, *.bib";
@@ -24,6 +24,7 @@ echo " - all custom packages that are not present in a standard LaTeX installati
 echo " - if the 'comment' package is used, \begin{comment} ... \end{comment} blocks must be removed before applying flattenPaper.";
 echo " - applying tikzexternalize to the paper must be working. However, when flattening the paper, \usetikzlibrary{external} must be removed on beforehand.";
 echo " - in one line, there must always only be one figure file that is included.";
+echo " - LaTeX package hyperref must be used to typeset links in bibliography correctly.";
 echo "";
 echo " Required tools that must be installed:";
 echo " - rename";
@@ -93,7 +94,7 @@ else
     PKGPREFIX=###   # dummy, must not be matched by rename command
 fi
 shift 2
-if [ ${#@} -gt 1 ]; then
+if [ ${#@} -gt 0 ]; then
     FIGS=$@
     FIGS4PDF=$1
 else
@@ -153,6 +154,12 @@ rm *.tex 2>>/dev/null
 mv $flattened.tmp $flattened.tex 2>>/dev/null
 mv $GLSENTRIES.tmp $GLSENTRIES.tex 2>>/dev/null
 
+# create build directory
+mkdir build
+mkdir build/$FIGS4PDF
+mkdir build/build
+mkdir build/build/$FIGS4PDF
+
 # flatten bib
 $SRC/flattenBib $flattened $VERBOSE
 
@@ -163,7 +170,7 @@ latexpand $flattened.tex | sponge $flattened.tex
 $SRC/tikzternalize $flattened.tex $FIGS4PDF $VERBOSE
 sed -i '/\\input{tudcolours\.def}/d' $flattened.tex
 
-# add IEEE copyright notice
+## add IEEE copyright notice
 #addIEEEcopyright $flattened.tex
 
 # expand macros (de-macro requires "-private" postfix to be added to .sty files first)
@@ -195,6 +202,7 @@ sed -i 's/\\todo.*{.*}//g' $flattened.tex
 sed -i '/\\graphicspath{{/d' $flattened.tex
 sed -i '/\\usepgfplotslibrary{external}/d' $flattened.tex
 sed -i '/\\tikzexternalize\[/d' $flattened.tex
+sed -i '/\\tikzset{external/d' $flattened.tex
 
 # remove options from pgfplots and circui(tikz) to avoid option clash
 sed -i 's/\\usepackage\[\?.*\]\?{pgfplots}/\\usepackage{pgfplots}/g' $flattened.tex
@@ -205,6 +213,9 @@ sed -i '/\\let.*\\undefined/d' $flattened.tex
 
 # remove any consecutive blank lines
 cat -s $flattened.tex | sponge $flattened.tex 
+
+# remove build directory
+rm -r build
 
 # clean up figs directory
 cd $FIGS4PDF

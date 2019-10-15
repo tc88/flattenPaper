@@ -139,13 +139,14 @@ if lastUsepackage != 0:
         contents.insert(lastUsepackage  ,'\\usepgfplotslibrary{external}\n')
     if not foundExternalizePrefix:
         contents.insert(lastUsepackage+1,'\\tikzexternalize[prefix='+figsDir+'/]\n')
+        contents.insert(lastUsepackage+2,'\\tikzset{external/system call={pdflatex \\tikzexternalcheckshellescape --output-directory=build -halt-on-error -interaction=batchmode -jobname "\image" "\\texsource"}}\n')
 
 # add tikzsetnextfilename commands to make the tikzexternalizer use the correct filenames
 if len(lineIdxTikz) != 0:
     lineIdxTikz.reverse() # walk backwards since additional lines are to be included
     figIdxTikz.reverse() # walk backwards since additional lines are to be included
     for i in range(len(figIdxTikz)):
-        contents.insert(lineIdxTikz[i]+1, '\\tikzsetnextfilename{fig'+figIdxTikz[i]+'}\n')
+        contents.insert(lineIdxTikz[i]+2, '\\tikzsetnextfilename{fig'+figIdxTikz[i]+'}\n')
 
 # write modified contents back to file
 f = open(filename,'w')
@@ -156,9 +157,9 @@ f.close()
 # call pdflatex to let tikzexternalizer do its work
 FNULL = open(os.devnull,'w')
 if verbose:
-    subprocess.call(["pdflatex", "-shell-escape", filename])
+    subprocess.call(["pdflatex", "-shell-escape","--output-directory=build", filename])
 else:
-    subprocess.call(["pdflatex", "-shell-escape", filename],stdout=FNULL)
+    subprocess.call(["pdflatex", "-shell-escape","--output-directory=build", filename],stdout=FNULL)
 
 # find line numbers where tikzpicture-environment starts and ends
 f = open(filename,'r')

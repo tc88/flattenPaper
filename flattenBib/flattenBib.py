@@ -70,20 +70,20 @@ if bib_file:
 
     # remove any .aux and .bbl files if existent
     path = os.path.dirname(os.path.abspath(__file__))
-    if os.path.isfile(filename+'.aux'):
-        os.remove(filename+'.aux')
+    if os.path.isfile('./build/'+filename+'.aux'):
+        os.remove('./build/'+filename+'.aux')
     if os.path.isfile(filename+'.bbl'):
         os.remove(filename+'.bbl')
 
     # call pdflatex and bibtex to generate .bbl file
     FNULL = open(os.devnull,'w')
     if verbose:
-        subprocess.call(["pdflatex", "-shell-escape", filename])
-        subprocess.call(["bibtex", filename])
+        subprocess.call(["pdflatex", "-shell-escape","--output-directory=build",filename])
+        subprocess.call(["bibtex",'./build/'+filename])
     else:
-        subprocess.call(["pdflatex", "-shell-escape", filename],stdout=FNULL)
-        subprocess.call(["bibtex", filename],stdout=FNULL)
-    os.rename(filename+'.bbl',filename+'_bib.tex')
+        subprocess.call(["pdflatex", "-shell-escape","--output-directory=build",filename],stdout=FNULL)
+        subprocess.call(["bibtex",'./build/'+filename],stdout=FNULL)
+    os.rename('./build/'+filename+'.bbl',filename+'_bib.tex')
 
     # reads in .tex file's content without bib commands again and save index of line where to insert .bbl file
     f = open(filename+'.tex','r')
@@ -116,9 +116,9 @@ if bib_file:
 
     # test run
     if verbose:
-        subprocess.call(["pdflatex",filename])
+        subprocess.call(["pdflatex","-shell-escape","--output-directory=build",filename])
     else:
-        subprocess.call(["pdflatex",filename],stdout=FNULL)
+        subprocess.call(["pdflatex","-shell-escape","--output-directory=build",filename],stdout=FNULL)
 else:
     print("no bib file was detected. Thus, there was nothing to do.")
 
