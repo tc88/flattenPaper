@@ -183,6 +183,8 @@ $SRC/rmLatexPackageOptions $flattened.tex
 find . -name '*.sty' -print0 | xargs -0 sed -i 's/\\newcommand\*/\\newcommand/g' 2>>/dev/null # remove star from \newcommand since not supported by de-macro
 find . -name '*.sty' -print0 | xargs -0 sed -i 's/\\renewcommand\*/\\renewcommand/g' 2>>/dev/null # remove star from \renewcommand since not supported by de-macro
 $SRC/flattenUsepackage $flattened.tex
+sed -i 's/\\usepackage\(\[\?.*\]\?\){temf-\(.*\)}/\\usepackage\1{temf-\2-private}/g' $flattened.tex # add -private to flattened temf packages
+sed -i 's/\\usepackage\(\[\?.*\]\?\){temf-\(.*\)-private-private}/\\usepackage\1{temf-\2-private}/g' $flattened.tex # remove double private postfixes
 if [ -f "$PKGPREFIX-acronyms-private.sty" ]; then
     $SRC/flattenGlossary $flattened.tex "$PKGPREFIX-acronyms-private.sty"
 fi
