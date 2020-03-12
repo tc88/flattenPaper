@@ -11,6 +11,8 @@ import argparse
 import subprocess
 import re
 import sys
+import glob
+import shutil
 
 print "flattening bibliography ..."
 
@@ -79,9 +81,13 @@ if bib_file:
     FNULL = open(os.devnull,'w')
     if verbose:
         subprocess.call(["pdflatex", "-shell-escape","--output-directory=build",filename])
+        for file in glob.glob(r'./build/*.bib'):
+            shutil.copy(file,'./')
         subprocess.call(["bibtex",'./build/'+filename])
     else:
         subprocess.call(["pdflatex", "-shell-escape","--output-directory=build",filename],stdout=FNULL)
+        for file in glob.glob(r'./build/*.bib'):
+            shutil.copy(file,'./')
         subprocess.call(["bibtex",'./build/'+filename],stdout=FNULL)
     os.rename('./build/'+filename+'.bbl',filename+'_bib.tex')
 

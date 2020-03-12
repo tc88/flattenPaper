@@ -1,0 +1,71 @@
+% author: Thorben Casper
+% created on: 2020/03/11
+
+\documentclass{elsarticle}
+
+\usepackage[utf8]{inputenc}
+\usepackage{subcaption}
+\usepackage{amsmath}
+\usepackage{graphicx}
+\graphicspath{{./images}}
+\usepackage[english]{babel}
+\usepackage{tikz}
+\usepackage{pgfplots}
+\pgfplotsset{compat=1.15}
+\usepackage[mode=buildnew]{standalone}
+\usepackage{booktabs}
+\usepackage{hyperref}
+\usepackage{lipsum}
+\usepackage{comment}
+\usepackage{algorithm2e}
+\newtheorem{remark}{Remark}[section]
+
+% Load acronyms and new commands
+\usepackage{glossaries}
+\newacronym{cad}{CAD}{computer-aided design}
+\makeglossaries
+
+% user-defined macros
+\usepackage[myoption]{my-macros}
+\usepackage{macros-private}
+
+\bibliographystyle{elsarticle-num}
+
+\begin{document}
+
+\begin{frontmatter}
+\title{Example 01}
+\author[address1,address2]{Author 1\corref{mycorrespondingauthor}}
+\cortext[mycorrespondingauthor]{Corresponding author}
+\ead{email1}
+\author[address2]{Author 2}
+\author[address2,address3]{Author 3}
+\address[address1]{Address 1}
+\address[address2]{Address 2}
+\address[address3]{Address 3}
+\begin{abstract}
+This is an example paper to demonstrate the capabilities of flattenPaper.
+\end{abstract}
+\begin{keyword}
+flatten, figures, bibliography
+\end{keyword}
+\end{frontmatter}
+
+\input{introduction.tex}
+\input{main.tex}
+
+\section{Conclusion}
+\lipsum[2-4]
+
+\section*{Acknowledgments}
+The authors would like to thank \dots
+
+\appendix
+
+\section{Acronyms}
+This is an appendix that uses acronyms like \gls*{cad}.
+
+\section*{References}
+\bibliography{references}
+
+\end{document}

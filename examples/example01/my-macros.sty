@@ -1,0 +1,10 @@
+% author: Thorben Casper
+% created on: 2020/03/11
+
+\newif\if@myoption\@myoptionfalse
+\DeclareOption{myoption}{\@myoptiontrue}
+\ProcessOptions\relax
+
+\RequirePackage{xspace}
+
+\newcommand*{\Rmat}{\ensuremath{\mathbf{R}}\xspace}

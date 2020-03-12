@@ -54,12 +54,15 @@ foundExternalizePrefix = False    # initializes switch whether prefix of externa
 lastUsepackage = 0                # line of last usepackage use in main .tex file
 figCounter = 0                    # top level figure counter
 insideTikzEnviron = False         # indicator whether inside of a tikz environment
+insideCommentEnviron = False      # indicator whether inside of a comment environment
 for num, line in enumerate(f,1):
     contents.append(line)
     if line.strip() and not line.strip()[0] == '%':
         if '\\end{tikzpicture}' in line:
             insideTikzEnviron = False
-        if not insideTikzEnviron: # only check for new figures if outside of any tikz environment
+        if '\\end{comment}' in line:
+            insideCommentEnviron = False
+        if not insideCommentEnviron and not insideTikzEnviron: # only check for new figures if outside of any tikz environment
             if '\\begin{figure}' in line or '\\begin{figure*}' in line:
                 figCounter += 1
             if '\\begin{subfigure}' in line or '\\subfloat' in line or '\\subfigure' in line:
@@ -79,6 +82,8 @@ for num, line in enumerate(f,1):
                 insideTikzEnviron = True
                 lineIdxTikz.append(num)
                 figIdxTikz.append(str(figCounter)+figIdxSuffix)
+            if '\\begin{comment}' in line:
+                insideCommentEnviron = True
             if '\\includegraphics' in line:
                 match = re.search(r'includegraphics.*{(.+?)}',line)
                 searchResult = match.group(1)
@@ -136,7 +141,7 @@ os.chdir('..')
 # adds tikzexternalizer loading commands
 if lastUsepackage != 0:
     if not foundExternalize:
-        contents.insert(lastUsepackage  ,'\\usepgfplotslibrary{external}\n')
+        contents.insert(lastUsepackage  ,'\\usetikzlibrary{external}\n')
     if not foundExternalizePrefix:
         contents.insert(lastUsepackage+1,'\\tikzexternalize[prefix='+figsDir+'/]\n')
         contents.insert(lastUsepackage+2,'\\tikzset{external/system call={pdflatex \\tikzexternalcheckshellescape --output-directory=build -halt-on-error -interaction=batchmode -jobname "\image" "\\texsource"}}\n')
@@ -161,6 +166,11 @@ if verbose:
 else:
     subprocess.call(["pdflatex", "-shell-escape","--output-directory=build", filename],stdout=FNULL)
 
+# move pdf files from build/ directory to figsDir
+if len(lineIdxTikz) !=0:
+    for i in range(len(figIdxTikz)):
+        shutil.move('./build/'+figsDir+'/fig'+figIdxTikz[i]+'.pdf','./'+figsDir+'/')
+
 # find line numbers where tikzpicture-environment starts and ends
 f = open(filename,'r')
 contents = []             # collects file content in array of lines
@@ -172,12 +182,16 @@ for num, line in enumerate(f,1):
     contents.append(line)
     if '\\end{tikzpicture}' in line:
         insideTikzEnviron = False
-    if not insideTikzEnviron:
+    if '\\end{comment}' in line:
+        insideCommentEnviron = False
+    if not insideCommentEnviron and not insideTikzEnviron:
         if '\\tikzsetnextfilename' in line:
             indicesDelete.append(num)
         if '\\begin{tikzpicture}' in line:
             idxTikzBegin.append(num)
             insideTikzEnviron = True
+        if '\\begin{comment}' in line:
+            insideCommentEnviron = True
         if '\\end{tikzpicture}' in line:
             idxTikzEnd.append(num)
 f.close()

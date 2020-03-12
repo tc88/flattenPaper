@@ -1,0 +1,15 @@
+#!/bin/bash
+
+# clean up
+rm *.sls *.slg *.slo *.gls *.ist *.glg *.glo *.alg *.acr *.acn *.aux *.auxlock *.bbl *.bcf *.blg *.log *.out *.run.xml *.sta *.spl *.len *.nav *.snm *.toc *.pag *.glsdefs example02.pdf 2>>/dev/null
+
+pdflatex -shell-escape example01
+bibtex example01
+pdflatex -shell-escape example01
+pdflatex -shell-escape example01
+
+# clean up
+rm *.sls *.slg *.slo *.gls *.ist *.glg *.glo *.alg *.acr *.acn *.aux *.auxlock *.bbl *.bcf *.blg *.log *.out *.run.xml *.sta *.spl *.len *.nav *.snm *.toc *.pag *.glsdefs 2>>/dev/null
+
+# clean up images and figs directories
+rm figs/*.aux figs/*.log figs/*.pdf images/*.aux images/*.log images/*.pdf

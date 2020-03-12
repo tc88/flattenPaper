@@ -1,0 +1,26 @@
+\section{Introduction}
+\label{sec:introduction}
+
+To provide an example using natbib, we use citations here~\cite{Jackson,Moore}.
+In the following, the \emph{lipsum} package is exploited.
+
+\lipsum[5-9]
+
+\begin{figure}
+    \centering
+    \begin{tikzpicture}
+        \node at (0,0) {\includegraphics[width=0.6\textwidth]{./figs/flatEarth}};
+        \draw[->,ultra thick] (-1,1) -- (0.5,0);
+    \end{tikzpicture}
+    \caption{Using \emph{includegraphics} inside a \emph{tikz} node.}
+ \label{fig:chip}
+\end{figure}
+
+\begin{figure}
+    \centering
+    \includestandalone{./images/wireCrossSection}
+    \caption{A simple figure representing a dashed circle.}
+    \label{fig:wireCrossSection}
+\end{figure}
+
+\lipsum[10]

@@ -1,0 +1,12 @@
+#!/bin/bash
+
+# clean up
+rm *.sls *.slg *.slo *.gls *.ist *.glg *.glo *.alg *.acr *.acn *.aux *.auxlock *.bbl *.bcf *.blg *.log *.out *.run.xml *.sta *.spl *.len *.nav *.snm *.toc *.pag *.glsdefs example02.pdf 2>>/dev/null
+
+pdflatex example02
+bibtex example02
+pdflatex example02
+pdflatex example02
+
+# clean up
+rm *.sls *.slg *.slo *.gls *.ist *.glg *.glo *.alg *.acr *.acn *.aux *.auxlock *.bbl *.bcf *.blg *.log *.out *.run.xml *.sta *.spl *.len *.nav *.snm *.toc *.pag *.glsdefs 2>>/dev/null

@@ -13,8 +13,6 @@ import os
 import argparse
 import fnmatch
 
-print("de-macrofies FIT-related bow commands ...")
-
 # parse input arguments
 parser = argparse.ArgumentParser()
 parser.add_argument("tex_file", help="the .tex-file that shall be modified")
@@ -37,6 +35,8 @@ f.close()
 # if temf-finite style file is not used, there is nothing to do
 if not foundTEMFfinite:
     exit()
+
+print("de-macrofies FIT-related bow commands ...")
 
 # find temf-finite style file recursively in current directory
 try:

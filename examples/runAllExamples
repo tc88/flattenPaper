@@ -1,0 +1,19 @@
+#!/bin/bash
+
+# flatten example01
+cd example01
+echo "========================"
+echo "flattening example01 ..."
+echo "========================"
+./flatten
+rm -r paper4arxiv
+cd ..
+
+# flatten example02
+cd example02
+echo "========================"
+echo "flattening example02 ..."
+echo "========================"
+./flatten
+rm -r paper4arxiv
+cd ..

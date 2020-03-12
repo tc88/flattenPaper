@@ -42,7 +42,7 @@ texContent = "".join(texContent)
 
 # exit immediately if no package options are used for private packages
 if len(packages) == 0:
-    print('rmLatexPackageOptions: no package options found for private packages')
+    print('rmLatexPackageOptions: no package options found for private packages.')
     exit()
 
 for i in range(len(packages)):
@@ -82,4 +82,4 @@ f = open(filename+'.tex','w')
 f.write(texContent)
 f.close()
 
-print("finished removing package options ...")
+print("finished removing package options.")
