@@ -67,18 +67,16 @@ if [ $# == 0 ] ; then
 fi
 
 # getopts does not support long options, however, getopt does not work on, e.g., BSD systems
-while getopts "h v i" options; do
-    case $options in
-        h ) help
-            exit 0
-            ;;
-        i ) IEEE=1
-            ;;
-        v ) VERBOSE=1
-            ;;
-       \? ) echo $USAGE
-            exit 1
-            ;;
+while getopts "hiv" flag; do
+    case $flag in
+        h) help
+           exit 0
+           ;;
+        i) IEEE=1;;
+        v) VERBOSE=1;;
+       \?) echo $USAGE
+           exit 1
+           ;;
     esac
 done
 
