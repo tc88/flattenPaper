@@ -1,0 +1,3 @@
+#!/bin/bash
+
+flattenPaper $1 example03.tex

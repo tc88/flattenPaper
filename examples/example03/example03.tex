@@ -1,0 +1,22 @@
+\documentclass{article}
+
+\usepackage{hyperref} % required since bibtex uses \href for doi fields in .bbl-file
+
+% BEGIN BIBLIOGRAPHY SETUP
+\usepackage{biblatex}
+\addbibresource{references.bib}
+% END BIBLIOGRAPHY SETUP
+
+\title{Example 03}
+\author{Author 1}
+
+\begin{document}
+
+\maketitle
+
+\section{Introduction}
+Let us use some references~\cite{Jackson,Moore}.
+
+\printbibliography
+
+\end{document}

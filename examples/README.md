@@ -14,7 +14,7 @@ Example 01
 - tikz figures including nodes that contain \includegraphics
 - tikzpicture environments without using \input, \includestandalone or similar
 - subfigures using subcaptions package
-- bibliography using natbib (bibtex)
+- using natbib (bibtex) to typeset bibliography
 - table using table and tabular environments
 - pgfplot using axis environment and \addplot
 - subfiles using \input
@@ -38,3 +38,9 @@ Example 02
 - IEEE copyright notice is placed by option -i
 - calling flattenPaper using a .tex-file with extension
 - example how to solve the incompatibility of tikz-cd with tikzexternalize
+
+Example 02
+----------
+
+- using biblatex to typeset bibliography
+  warning: the use of biblatex leads to a different bibliography formatting in the flattened paper

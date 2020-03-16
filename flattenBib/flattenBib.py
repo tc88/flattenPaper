@@ -4,7 +4,7 @@
 # edited by Thorben Casper
 # flattens the bibliography of a .tex file such that thebibliography environment is used. Converts biblatex to bibtex if necessary. Then obtains bibliography from .bbl-file created by bibtex
 #
-# it is important to enclose all bib setup lines in the preamble into a beginning line containing BEGIN BIBLIOGRAPHY SETUP and an ending line END BIBLIOGRAPHY SETUP. The only supported commands with \begin{document} and \end{document} are \bibliographystyle, \bibliography and \printbibliography. DO NOT use any other commands here!
+# it is important to enclose all bib setup lines in the preamble into a beginning line containing BEGIN BIBLIOGRAPHY SETUP and an ending line END BIBLIOGRAPHY SETUP. The only supported commands between \begin{document} and \end{document} are \bibliographystyle, \bibliography and \printbibliography. DO NOT use any other commands here!
 
 import os
 import argparse
@@ -31,12 +31,14 @@ bib_file = None
 skipLines = 0
 nrSkippedLines = 0
 contents = []
+biblatexDetected = False
 for num, line in enumerate(f,1):
     if 'BEGIN BIBLIOGRAPHY SETUP' in line:
         skipLines = 1
+        biblatexDetected = True
     if skipLines:
         nrSkippedLines += 1
-    if not '\\printbibliography' in line and not '\\bibliography' in line and not '\\bibfont' in line and not skipLines:
+    if not biblatexDetected or (not '\\printbibliography' in line and not '\\bibliography' in line and not '\\bibfont' in line and not skipLines):
         contents.append(line)
     if '\\bibliography' in line and line.strip()[0] != '%':
         nrSkippedLines += 1
@@ -61,11 +63,12 @@ if bib_file:
     bib_file = os.path.splitext(os.path.basename(bib_file))[0]
 
     # inserts the commands required by bibtex
-    contents.insert(bibline,'\\bibliographystyle{flatPaper}\n')
-    contents.insert(bibline+1,'\\bibliography{'+bib_file+'}\n')
-    contents = "".join(contents)
+    if biblatexDetected:
+        contents.insert(bibline,'\\bibliographystyle{flatPaper}\n')
+        contents.insert(bibline+1,'\\bibliography{'+bib_file+'}\n')
 
     # write modified contents to output file
+    contents = "".join(contents)
     f = open(filename+'.tex','w')
     f.write(contents)
     f.close()

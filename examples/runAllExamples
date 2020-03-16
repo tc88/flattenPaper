@@ -17,3 +17,12 @@ echo "========================"
 ./flatten
 rm -r paper4arxiv
 cd ..
+
+# flatten example03
+cd example03
+echo "========================"
+echo "flattening example03 ..."
+echo "========================"
+./flatten
+rm -r paper4arxiv
+cd ..

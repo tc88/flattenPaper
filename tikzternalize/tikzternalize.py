@@ -139,7 +139,7 @@ for i in range(len(graphicsNames)):
 os.chdir('..')
 
 # adds tikzexternalizer loading commands
-if lastUsepackage != 0:
+if lastUsepackage != 0 and figIdxTikz:
     if not foundExternalize:
         contents.insert(lastUsepackage  ,'\\usetikzlibrary{external}\n')
     if not foundExternalizePrefix:
