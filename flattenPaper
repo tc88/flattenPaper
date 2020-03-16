@@ -8,9 +8,10 @@ echo " Example usage: flattenPaper paper casper figs images pics";
 echo " Here, 'texFile' is a .tex file, 'pkgPrefix' the prefix for any private macro files apart from temf-* macros and 'figsDir' a directory that contains the figures. 'figsDir' is also used in the flattened version of the paper and will contain the .pdf files of the figures. If additional directories for figure sources are used, they can be specified using the optional parameter 'figsDirAdditional'. The directory name 'build' is not allowed";
 echo "";
 echo "Options:";
-echo " - h: shows help";
-echo " - i: adds IEEE copyright notice";
-echo " - v: enables verbose output";
+echo " -f: output directory is flattened"
+echo " -h: shows help";
+echo " -i: adds IEEE copyright notice";
+echo " -v: enables verbose output";
 echo "";
 echo " Supported source files:";
 echo " - *.tex, *.sty, *.cls, *.clo, *.bib";
@@ -47,6 +48,7 @@ echo " created in October 2016";
 VERSION=0.0.1
 VERBOSE=0
 IEEE=0
+FLATDIR=0
 USAGE="'Usage: flattenPaper texFile pkgPrefix figsDir'. For more details, call 'flattenPaper -h'"
 
 # get directory of this file (to follow symlinks, this complicated multi-line form is required)
@@ -67,8 +69,9 @@ if [ $# == 0 ] ; then
 fi
 
 # getopts does not support long options, however, getopt does not work on, e.g., BSD systems
-while getopts "hiv" flag; do
+while getopts "fhiv" flag; do
     case $flag in
+        f) FLATDIR=1;;
         h) help
            exit 0
            ;;
@@ -145,6 +148,7 @@ fi
 # copy all required source files from paper directory to new $DEST directory
 mkdir $DEST
 cp -t $DEST *.tex *.cls *.clo *.bib *.csv *.pdf 2>>/dev/null
+rm $DEST/$TEXFILE.pdf 2>>/dev/null
 cp -t $DEST $BASEDIR/flatPaper.bst
 find . -name '*.sty' -print0 | xargs -0 cp -t $DEST 2>>/dev/null
 for currentDir in $FIGS
@@ -177,7 +181,7 @@ $SRC/flattenBib $flattened $VERBOSE
 latexpand $flattened.tex | sponge $flattened.tex
 
 # calls tikzternalize to produce .pdf files for all used tikzpictures in order to hide the source codes
-$SRC/tikzternalize $flattened.tex $FIGS4PDF $VERBOSE
+$SRC/tikzternalize $flattened.tex $FIGS4PDF $FLATDIR $VERBOSE
 sed -i '/\\input{tudcolours\.def}/d' $flattened.tex
 
 # add IEEE copyright notice
@@ -256,7 +260,15 @@ if [ -d figsStandalone ]; then
 fi
 
 # clean up $DEST directory
-rm ${flattened}_bib.tex *.abs *.aux *.auxlock *.bcf *.bib *.blg *.bst *.glo *.ist *.log *.out *.run.xml *.thm *.spl *.suc *.syc *.upa *.upb *.pdf 2>>/dev/null
+rm ${flattened}_bib.tex *.abs *.aux *.auxlock *.bcf *.bib *.blg *.bst *.glo *.ist *.log *.out *.run.xml *.thm *.spl *.suc *.syc *.upa *.upb 2>>/dev/null
+if [ "$FLATDIR" = 1 ]; then
+    for currentDir in $FIGS
+        do
+            rm -r $currentDir
+        done
+else
+    rm *.pdf 2>>/dev/null
+fi
 rm -r tabs 2>>/dev/null
 
 # write compile file

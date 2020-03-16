@@ -9,6 +9,15 @@ echo "========================"
 rm -r paper4arxiv
 cd ..
 
+# flatten example01 with flat output directory
+cd example01
+echo "========================"
+echo "flattening example01 ..."
+echo "========================"
+./flatten -f
+rm -r paper4arxiv
+cd ..
+
 # flatten example02
 cd example02
 echo "========================"

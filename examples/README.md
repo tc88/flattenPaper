@@ -28,6 +28,7 @@ Example 01
 - comment block
 - figure in comment block
 - calling flattenPaper using a .tex-file without extension
+- using \includegraphics to load an eps file
 
 Example 02
 ----------
