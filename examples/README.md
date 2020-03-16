@@ -27,6 +27,7 @@ Example 01
 - remark block
 - comment block
 - figure in comment block
+- calling flattenPaper using a .tex-file without extension
 
 Example 02
 ----------
@@ -35,3 +36,4 @@ Example 02
 - no figures at all, thus no separate figure directories
 - no \usepackage is used
 - IEEE copyright notice is placed by option -i
+- calling flattenPaper using a .tex-file with extension

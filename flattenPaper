@@ -95,6 +95,7 @@ hash de-macro 2>/dev/null  || { echo >&2 "I require de-macro but it's not instal
 
 # --- Parsing input -----------------------------------------------------------------------------------------
 TEXFILE=$1
+TEXFILE="${TEXFILE%.*}" # stripping filename extension if present
 if [ $2 ]; then
     PKGPREFIX=$2
 else
