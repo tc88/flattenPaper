@@ -4,8 +4,8 @@ function help () {
 echo " This script prepares a paper source code to be published to arxiv. It needs to be called with the name of the main .tex file (without extension) that is located in the current directory";
 echo "";
 echo " Usage: flattenPaper texFile pkgPrefix figsDir [figsDirAdditional]";
-echo " Example usage: flattenPaper paper casper figs images pics";
-echo " Here, 'texFile' is a .tex file, 'pkgPrefix' the prefix for any private macro files apart from temf-* macros and 'figsDir' a directory that contains the figures. 'figsDir' is also used in the flattened version of the paper and will contain the .pdf files of the figures. If additional directories for figure sources are used, they can be specified using the optional parameter 'figsDirAdditional'. The directory name 'build' is not allowed";
+echo " Example usage: flattenPaper paper my figs images pics";
+echo " Here, 'texFile' is a .tex file, 'pkgPrefix' the prefix for any private macro files and 'figsDir' a directory that contains the figures. 'figsDir' is also used in the flattened version of the paper and will contain the .pdf files of the figures. If additional directories for figure sources are used, they can be specified using the optional parameter 'figsDirAdditional'. The directory name 'build' is not allowed";
 echo "";
 echo "Options:";
 echo " -f: output directory is flattened"
@@ -190,17 +190,13 @@ if [ "$IEEE" = 1 ]; then
 fi
 
 # expand macros (de-macro requires "-private" postfix to be added to .sty files first)
-rename 's/temf(.*)\./temf$1-private\./g' *.sty
 rename "s/$PKGPREFIX-(.*)\./$PKGPREFIX-\$1-private\./g" *.sty
-sed -i 's/\\usepackage\(\[\?.*\]\?\){temf-\(.*\)}/\\usepackage\1{temf-\2-private}/g' $flattened.tex
 sed -i "s/\\usepackage\(\[\?.*\]\?\){$PKGPREFIX-\(.*\)}/\\\\usepackage\1{$PKGPREFIX-\2-private}/g" $flattened.tex
 sed -i 's/\\\\usepackage/\\usepackage/g' $flattened.tex # correct problem introduced by previous line
 $SRC/rmLatexPackageOptions $flattened.tex
 find . -name '*.sty' -print0 | xargs -0 sed -i 's/\\newcommand\*/\\newcommand/g' 2>>/dev/null # remove star from \newcommand since not supported by de-macro
 find . -name '*.sty' -print0 | xargs -0 sed -i 's/\\renewcommand\*/\\renewcommand/g' 2>>/dev/null # remove star from \renewcommand since not supported by de-macro
 $SRC/flattenUsepackage $flattened.tex
-sed -i 's/\\usepackage\(\[\?.*\]\?\){temf-\(.*\)}/\\usepackage\1{temf-\2-private}/g' $flattened.tex # add -private to flattened temf packages
-sed -i 's/\\usepackage\(\[\?.*\]\?\){temf-\(.*\)-private-private}/\\usepackage\1{temf-\2-private}/g' $flattened.tex # remove double private postfixes
 if [ -f "$PKGPREFIX-acronyms-private.sty" ]; then
     $SRC/flattenGlossary $flattened.tex "$PKGPREFIX-acronyms-private.sty"
 fi
@@ -261,12 +257,15 @@ fi
 
 # clean up $DEST directory
 rm ${flattened}_bib.tex *.abs *.aux *.auxlock *.bcf *.bib *.blg *.bst *.glo *.ist *.log *.out *.run.xml *.thm *.spl *.suc *.syc *.upa *.upb 2>>/dev/null
-if [ "$FLATDIR" = 1 ]; then
-    for currentDir in $FIGS
-        do
-            rm -r $currentDir
-        done
-else
+for currentDir in $FIGS
+do
+    if [ $currentDir != $FIGS4PDF ] || [ "$FLATDIR" = 1 ]; then
+        rm -r $currentDir
+    elif [ $currentDir = $FIGS4PDF ]; then
+        rmdir $FIGS4PDF 2>>/dev/null
+    fi
+done
+if [ "$FLATDIR" = 0 ]; then
     rm *.pdf 2>>/dev/null
 fi
 rm -r tabs 2>>/dev/null

@@ -3,8 +3,6 @@
 #
 # removes package option of private packages loaded in given .tex file such that de-macro does its work properly. The corresponding style files are changed according to the option that was given. All private packages must have the suffix '-private' as required by de-macro.
 #
-# !!! currently only works for casper-names and casper-macros !!!
-#
 # usage: - rmLatexPackageOptions example.tex
 #        - rmLatexPackageOptions example
 #
