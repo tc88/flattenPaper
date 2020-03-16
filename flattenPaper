@@ -7,6 +7,11 @@ echo " Usage: flattenPaper texFile pkgPrefix figsDir [figsDirAdditional]";
 echo " Example usage: flattenPaper paper casper figs images pics";
 echo " Here, 'texFile' is a .tex file, 'pkgPrefix' the prefix for any private macro files apart from temf-* macros and 'figsDir' a directory that contains the figures. 'figsDir' is also used in the flattened version of the paper and will contain the .pdf files of the figures. If additional directories for figure sources are used, they can be specified using the optional parameter 'figsDirAdditional'. The directory name 'build' is not allowed";
 echo "";
+echo "Options:";
+echo " - h: shows help";
+echo " - i: adds IEEE copyright notice";
+echo " - v: enables verbose output";
+echo "";
 echo " Supported source files:";
 echo " - *.tex, *.sty, *.cls, *.clo, *.bib";
 echo "";
@@ -41,6 +46,7 @@ echo " created in October 2016";
 
 VERSION=0.0.1
 VERBOSE=0
+IEEE=0
 USAGE="'Usage: flattenPaper texFile pkgPrefix figsDir'. For more details, call 'flattenPaper -h'"
 
 # get directory of this file (to follow symlinks, this complicated multi-line form is required)
@@ -61,10 +67,12 @@ if [ $# == 0 ] ; then
 fi
 
 # getopts does not support long options, however, getopt does not work on, e.g., BSD systems
-while getopts "h v" options; do
+while getopts "h v i" options; do
     case $options in
         h ) help
             exit 0
+            ;;
+        i ) IEEE=1
             ;;
         v ) VERBOSE=1
             ;;
@@ -173,8 +181,10 @@ latexpand $flattened.tex | sponge $flattened.tex
 $SRC/tikzternalize $flattened.tex $FIGS4PDF $VERBOSE
 sed -i '/\\input{tudcolours\.def}/d' $flattened.tex
 
-## add IEEE copyright notice
-#addIEEEcopyright $flattened.tex
+# add IEEE copyright notice
+if [ "$IEEE" = 1 ]; then
+    addIEEEcopyright $flattened.tex
+fi
 
 # expand macros (de-macro requires "-private" postfix to be added to .sty files first)
 rename 's/temf(.*)\./temf$1-private\./g' *.sty

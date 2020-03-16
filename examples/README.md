@@ -33,3 +33,5 @@ Example 02
 
 - using thebibliography-environment to typeset bibliography directly
 - no figures at all, thus no separate figure directories
+- no \usepackage is used
+- IEEE copyright notice is placed by option -i
