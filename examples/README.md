@@ -37,3 +37,4 @@ Example 02
 - no \usepackage is used
 - IEEE copyright notice is placed by option -i
 - calling flattenPaper using a .tex-file with extension
+- example how to solve the incompatibility of tikz-cd with tikzexternalize

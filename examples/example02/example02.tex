@@ -1,5 +1,13 @@
 \documentclass{article}
 
+% the following six lines show an example of how to solve the incompatibility of tikzexternalize with tikz-cd
+\usepackage{tikz-cd}
+\usepackage{etoolbox}
+\ifdef{\tikzexternaldisable}{
+    \AtBeginEnvironment{tikzcd}{\tikzexternaldisable}
+    \AtEndEnvironment{tikzcd}{\tikzexternalenable}
+}
+
 \title{Example 02}
 \author{Author 1}
 
@@ -9,6 +17,17 @@
 
 \section{Introduction}
 Let us use some references~\cite{Jackson_1998aa,Moore_1965aa}.
+
+\begin{tikzcd}
+T
+\arrow[drr, bend left, "x"]
+\arrow[ddr, bend right, "y"]
+\arrow[dr, dotted, "{(x,y)}" description] & & \\
+& X \times_Z Y \arrow[r, "p"] \arrow[d, "q"]
+& X \arrow[d, "f"] \\
+& Y \arrow[r, "g"]
+& Z
+\end{tikzcd}
 
 \input{references}
 
