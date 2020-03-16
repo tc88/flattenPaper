@@ -6,7 +6,7 @@ echo "========================"
 echo "flattening example01 ..."
 echo "========================"
 ./flatten
-rm -r paper4arxiv
+rm -r paperFlattened
 cd ..
 
 # flatten example01 with flat output directory
@@ -15,7 +15,7 @@ echo "========================"
 echo "flattening example01 ..."
 echo "========================"
 ./flatten -f
-rm -r paper4arxiv
+rm -r paperFlattened
 cd ..
 
 # flatten example02
@@ -24,7 +24,7 @@ echo "========================"
 echo "flattening example02 ..."
 echo "========================"
 ./flatten
-rm -r paper4arxiv
+rm -r paperFlattened
 cd ..
 
 # flatten example03
@@ -33,5 +33,5 @@ echo "========================"
 echo "flattening example03 ..."
 echo "========================"
 ./flatten
-rm -r paper4arxiv
+rm -r paperFlattened
 cd ..

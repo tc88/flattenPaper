@@ -39,7 +39,7 @@ echo " - de-macro";
 echo "";
 echo " For bibliography flattening, there should be no comment lines including \bibliography* in the file.";
 echo "";
-echo " - output .tex file is written to paper4arxiv/flattened.tex";
+echo " - output .tex file is written to paperFlattened/flattened.tex";
 echo "";
 echo " author: Thorben Casper";
 echo " created in October 2016";
@@ -120,7 +120,7 @@ fi
 SRC="$(dirname "$(readlink -f "$0")")/src"
 
 # define directory for destination files
-DEST=paper4arxiv
+DEST=paperFlattened
 
 # settings
 flattened='flattened' # main .tex file for the $DEST directory
