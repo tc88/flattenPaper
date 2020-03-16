@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 # changes a .tex file in a way that all tikz figures are included as pdf files 
 # 
-# Usage: - tikzternalize example.tex figsDir flatDir verbose
+# Usage: - tikzternalize example.tex figsDir flatDir quiet
 #
 # Tested under Linux and Windows
 #
@@ -10,7 +10,7 @@
 #
 # options
 # - flatDir: if True, a flat output directory is generated
-# - verbose: verbosity of terminal output
+# - quiet: enables quiet output
 #
 # prerequisites
 # - different figures must have different names, not only different extensions
@@ -36,14 +36,14 @@ parser = argparse.ArgumentParser()
 parser.add_argument("tex_file", help=".tex-file that shall be modified")
 parser.add_argument("figsDir" , help="directory, in which ALL figures are contained")
 parser.add_argument("flatDir" , help="if true, a flat output directory is generated")
-parser.add_argument("verbose" , help="verbosity of terminal output")
+parser.add_argument("quiet"   , help="enables quiet output")
 # example how to include additional optional arguments
 # parser.add_argument("-c","--createPDF", help="use if you want to create the .pdf directly",action="store_true")
 parser_args = parser.parse_args()
 filename = parser_args.tex_file
 figsDir = parser_args.figsDir
 flatDir = int(parser_args.flatDir)
-verbose = int(parser_args.verbose)
+quiet = int(parser_args.quiet)
 
 # reads .tex file and mainly saves line numbers for tikz pictures and the file names of includegraphics files
 f = open(filename,'r')
@@ -180,7 +180,7 @@ f.close()
 
 # call pdflatex to let tikzexternalizer do its work
 FNULL = open(os.devnull,'w')
-if verbose:
+if not quiet:
     subprocess.call(["pdflatex", "-shell-escape","--output-directory=build", filename])
 else:
     subprocess.call(["pdflatex", "-shell-escape","--output-directory=build", filename],stdout=FNULL)

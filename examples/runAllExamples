@@ -2,36 +2,36 @@
 
 # flatten example01
 cd example01
-echo "========================"
+echo "=================================================="
 echo "flattening example01 ..."
-echo "========================"
-./flatten
+echo "=================================================="
+./flatten -q
 rm -r paperFlattened
 cd ..
 
 # flatten example01 with flat output directory
 cd example01
-echo "========================"
-echo "flattening example01 ..."
-echo "========================"
-./flatten -f
+echo "=================================================="
+echo "flattening example01 with flat output directory..."
+echo "=================================================="
+./flatten -fq
 rm -r paperFlattened
 cd ..
 
 # flatten example02
 cd example02
-echo "========================"
+echo "=================================================="
 echo "flattening example02 ..."
-echo "========================"
-./flatten
+echo "=================================================="
+./flatten -q
 rm -r paperFlattened
 cd ..
 
 # flatten example03
 cd example03
-echo "========================"
+echo "=================================================="
 echo "flattening example03 ..."
-echo "========================"
-./flatten
+echo "=================================================="
+./flatten -q
 rm -r paperFlattened
 cd ..

@@ -11,7 +11,7 @@ echo "Options:";
 echo " -f: output directory is flattened"
 echo " -h: shows help";
 echo " -i: adds IEEE copyright notice";
-echo " -v: enables verbose output";
+echo " -q: enables quiet output";
 echo "";
 echo " Supported source files:";
 echo " - *.tex, *.sty, *.cls, *.clo, *.bib";
@@ -46,7 +46,7 @@ echo " created in October 2016";
 }
 
 VERSION=0.0.1
-VERBOSE=0
+QUIET=0
 IEEE=0
 FLATDIR=0
 USAGE="'Usage: flattenPaper texFile pkgPrefix figsDir'. For more details, call 'flattenPaper -h'"
@@ -69,14 +69,14 @@ if [ $# == 0 ] ; then
 fi
 
 # getopts does not support long options, however, getopt does not work on, e.g., BSD systems
-while getopts "fhiv" flag; do
+while getopts "fhiq" flag; do
     case $flag in
         f) FLATDIR=1;;
         h) help
            exit 0
            ;;
         i) IEEE=1;;
-        v) VERBOSE=1;;
+        q) QUIET=1;;
        \?) echo $USAGE
            exit 1
            ;;
@@ -175,13 +175,13 @@ mkdir build/build
 mkdir build/build/$FIGS4PDF
 
 # flatten bib
-$SRC/flattenBib $flattened $VERBOSE
+$SRC/flattenBib $flattened $QUIET
 
 # apply latexpand again to remove comments
 latexpand $flattened.tex | sponge $flattened.tex
 
 # calls tikzternalize to produce .pdf files for all used tikzpictures in order to hide the source codes
-$SRC/tikzternalize $flattened.tex $FIGS4PDF $FLATDIR $VERBOSE
+$SRC/tikzternalize $flattened.tex $FIGS4PDF $FLATDIR $QUIET
 sed -i '/\\input{tudcolours\.def}/d' $flattened.tex
 
 # add IEEE copyright notice
@@ -273,7 +273,7 @@ rm -r tabs 2>>/dev/null
 # write compile file
 echo "#!/bin/bash" >> compile
 echo "echo 'compiling PDF file ...'" >> compile
-if [ "$VERBOSE" = 1 ]; then
+if [ "$QUIET" = 0 ]; then
     echo "pdflatex "$flattened.tex"" >> compile
     echo "pdflatex "$flattened.tex"" >> compile
 else
