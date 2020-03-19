@@ -161,7 +161,7 @@ sed -i '/\\input{tudcolours\.def}/d' $flattened.tex
 
 # add IEEE copyright notice
 if [ "$IEEE" = 1 ]; then
-    addIEEEcopyright $flattened.tex
+    $SRC/addIEEEcopyright $flattened.tex
 fi
 
 # expand macros (de-macro requires "-private" postfix to be added to .sty files first)
