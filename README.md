@@ -16,11 +16,12 @@ created in October 2016
 
 ## Installation
 
-The following tools are required to be pre-installed:
+This tool is based on bash and has only been tested on Ubuntu. On Windows, it could be promising to use Git Bash for Windows or a Linux subsystem under Windows 10. Apart from the OS requirement, the following tools need to be pre-installed:
 - latexpand
-- de-macro
+- de-macro (officially only tested on Unix systems)
+- tikz-cd (a TikZ library)
 
-## Prerequisites
+## LaTeX Prerequisites
 
 ### Packages
 - packages are loaded without using any additional path
