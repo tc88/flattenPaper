@@ -64,8 +64,6 @@ shift $(($OPTIND - 1))
 # --- Compatibility -----------------------------------------------------------------------------------------
 
 # check installed software
-hash rename 2>/dev/null    || { echo >&2 "I require rename but it's not installed. Aborting.";    exit 1; }
-hash sponge 2>/dev/null    || { echo >&2 "I require sponge but it's not installed. Aborting.";    exit 1; }
 hash latexpand 2>/dev/null || { echo >&2 "I require latexpand but it's not installed. Aborting."; exit 1; }
 hash de-macro 2>/dev/null  || { echo >&2 "I require de-macro but it's not installed. Aborting.";  exit 1; }
 
@@ -75,7 +73,7 @@ TEXFILE="${TEXFILE%.*}" # stripping filename extension if present
 if [ $2 ]; then
     PKGPREFIX=$2
 else
-    PKGPREFIX=###   # dummy, must not be matched by rename command
+    PKGPREFIX=###   # dummy, must not be matched when renaming .sty-files
 fi
 
 # FIGS: all directories of figure sources
@@ -153,7 +151,9 @@ mkdir build/build/$FIGS4PDF
 $SRC/flattenBib $flattened $QUIET
 
 # apply latexpand again to remove comments
-latexpand $flattened.tex | sponge $flattened.tex
+tmp=$(mktemp)
+latexpand $flattened.tex > $tmp
+mv $tmp $flattened.tex
 
 # calls tikzternalize to produce .pdf files for all used tikzpictures in order to hide the source codes
 $SRC/tikzternalize $flattened.tex $FIGS4PDF $FLATDIR $QUIET
@@ -165,7 +165,7 @@ if [ "$IEEE" = 1 ]; then
 fi
 
 # expand macros (de-macro requires "-private" postfix to be added to .sty files first)
-rename "s/$PKGPREFIX-(.*)\./$PKGPREFIX-\$1-private\./g" *.sty
+for f in $PKGPREFIX-*.sty; do mv "$f" "$(echo "$f" | sed "s/$PKGPREFIX-\(.*\)\./$PKGPREFIX-\1-private\./")"; done
 sed -i "s/\\usepackage\(\[\?.*\]\?\){$PKGPREFIX-\(.*\)}/\\\\usepackage\1{$PKGPREFIX-\2-private}/g" $flattened.tex
 sed -i 's/\\\\usepackage/\\usepackage/g' $flattened.tex # correct problem introduced by previous line
 $SRC/rmLatexPackageOptions $flattened.tex
@@ -201,7 +201,9 @@ sed -i 's/\\usepackage\[\?.*\]\?{\(.*tikz\)}/\\usepackage{\1}/g' $flattened.tex
 sed -i '/\\let.*\\undefined/d' $flattened.tex
 
 # remove any consecutive blank lines
-cat -s $flattened.tex | sponge $flattened.tex 
+tmp=$(mktemp)
+cat -s $flattened.tex > $tmp
+mv $tmp $flattened.tex
 
 # remove build directory
 rm -r build

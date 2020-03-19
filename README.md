@@ -17,8 +17,6 @@ created in October 2016
 ## Installation
 
 The following tools are required to be pre-installed:
-- rename
-- sponge (in package 'moreutils')
 - latexpand
 - de-macro
 
