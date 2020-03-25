@@ -165,7 +165,10 @@ if [ "$IEEE" = 1 ]; then
 fi
 
 # expand macros (de-macro requires "-private" postfix to be added to .sty files first)
-for f in $PKGPREFIX-*.sty; do mv "$f" "$(echo "$f" | sed "s/$PKGPREFIX-\(.*\)\./$PKGPREFIX-\1-private\./")"; done
+if [ $PKGPREFIX != "###" ]
+then
+    for f in $PKGPREFIX-*.sty; do mv "$f" "$(echo "$f" | sed "s/$PKGPREFIX-\(.*\)\./$PKGPREFIX-\1-private\./")"; done
+fi
 sed -i "s/\\usepackage\(\[\?.*\]\?\){$PKGPREFIX-\(.*\)}/\\\\usepackage\1{$PKGPREFIX-\2-private}/g" $flattened.tex
 sed -i 's/\\\\usepackage/\\usepackage/g' $flattened.tex # correct problem introduced by previous line
 $SRC/rmLatexPackageOptions $flattened.tex
