@@ -1,0 +1,37 @@
+#!/bin/bash
+
+# flatten example01
+cd example01
+echo "=================================================="
+echo "flattening example01 ..."
+echo "=================================================="
+./flatten
+rm -r paperFlattened
+cd ..
+
+# flatten example01 with flat output directory
+cd example01
+echo "=================================================="
+echo "flattening example01 with flat output directory..."
+echo "=================================================="
+./flatten -f
+rm -r paperFlattened
+cd ..
+
+# flatten example02
+cd example02
+echo "=================================================="
+echo "flattening example02 ..."
+echo "=================================================="
+./flatten
+rm -r paperFlattened
+cd ..
+
+# flatten example03
+cd example03
+echo "=================================================="
+echo "flattening example03 ..."
+echo "=================================================="
+./flatten
+rm -r paperFlattened
+cd ..
