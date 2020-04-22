@@ -157,6 +157,7 @@ mv $tmp $flattened.tex
 
 # calls tikzternalize to produce .pdf files for all used tikzpictures in order to hide the source codes
 $SRC/tikzternalize $flattened.tex $FIGS4PDF $FLATDIR $QUIET
+if [ $? = 1 ]; then echo "something went wrong" && exit 1; fi
 sed -i '/\\input{tudcolours\.def}/d' $flattened.tex
 
 # add IEEE copyright notice
