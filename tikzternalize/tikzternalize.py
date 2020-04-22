@@ -163,7 +163,7 @@ if lastUsepackage != 0 and figIdxTikz:
         contents.insert(lastUsepackage  ,'\\usetikzlibrary{external}\n')
     if not foundExternalizePrefix:
         contents.insert(lastUsepackage+1,'\\tikzexternalize[prefix='+figsDir+'/]\n')
-        contents.insert(lastUsepackage+2,'\\tikzset{external/system call={pdflatex \\tikzexternalcheckshellescape --output-directory=build -halt-on-error -interaction=batchmode -jobname "\image" "\\texsource"}}\n')
+        contents.insert(lastUsepackage+2,'\\tikzsetexternalprefix{build/'+figsDir+'/}')
 
 # add tikzsetnextfilename commands to make the tikzexternalizer use the correct filenames
 if len(lineIdxTikz) != 0:
